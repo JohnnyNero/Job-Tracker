@@ -687,6 +687,11 @@ table.pipeline td.company-cell {
   max-width: 460px;
   padding: 20px;
 }
+.dialog.dialog-wide {
+  max-width: 620px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
 .dialog h2 {
   font-size: 16px;
   font-weight: 700;

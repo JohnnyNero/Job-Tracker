@@ -144,14 +144,15 @@ Honest friction points in what we've shipped, mapped to the pains above.
 Ranked by *impact on the stale-in-six-weeks failure ÷ effort*, scoped to the offline-first,
 store-mediated architecture.
 
-### Tier 1 — Kill capture friction
-1. **Paste-to-create.** One paste of the ad → heuristically pre-fill company, title, location,
-   salary (regex/first-line parsing, no network) and auto-archive the text we already store. Turns
-   a 5–10-minute entry into seconds and makes ad-archiving a by-product of capture.
-2. **Minimal required fields.** Require only company + title; everything else optional and
-   inline-editable in the table. Never gate a new row behind a form.
-3. **Auto-extract criteria at capture** from the pasted ad (offline heuristic; user prunes) so our
-   best structural feature is zero-effort output.
+### Tier 1 — Kill capture friction · ✅ shipped
+1. **Paste-to-create.** ✅ One paste of the ad heuristically fills role, company, location, and
+   salary (offline parser in `src/lib/parseAd.ts`; first-line + label + money-regex heuristics),
+   without clobbering manual edits, and archives the text we already store. A 5–10-minute entry is
+   now one paste.
+2. **Minimal required fields.** ✅ Role is the only required field; everything else is optional and
+   inline-editable. New rows are never gated behind a full form.
+3. **Auto-extract criteria at capture.** ✅ On create, the ad is split into a criteria checklist for
+   the new application, so our best structural feature is zero-effort output.
 
 ### Tier 2 — Turn "days silent" into an action queue
 4. **A "Needs you" triage view** over the signal we already compute: stale (≥14 days Applied) and
