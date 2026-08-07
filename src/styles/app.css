@@ -448,6 +448,19 @@ table.pipeline td.company-cell {
   grid-column: 1 / -1;
 }
 
+/* Evidence: bullet and full text side by side so the relationship is obvious. */
+.two-length {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .two-length {
+    grid-template-columns: 1fr;
+  }
+}
+
 .ad-pane {
   position: sticky;
   top: calc(var(--h-nav) + 20px);

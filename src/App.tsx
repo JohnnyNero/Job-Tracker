@@ -1,6 +1,7 @@
 import { useRoute, routes } from './router'
 import { Pipeline } from './components/Pipeline'
 import { ApplicationDetail } from './components/ApplicationDetail'
+import { Evidence } from './components/Evidence'
 import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
 import { Settings } from './components/Settings'
@@ -14,6 +15,7 @@ export function App() {
       <main className="page-wrap">
         {route.name === 'pipeline' && <Pipeline />}
         {route.name === 'application' && <ApplicationDetail id={route.id} />}
+        {route.name === 'evidence' && <Evidence />}
         {route.name === 'profiles' && <Profiles />}
         {route.name === 'cv' && <CvLocker />}
         {route.name === 'settings' && <Settings />}
@@ -36,6 +38,7 @@ function Nav({ routeName }: { routeName: string }) {
         Job Tracker
       </a>
       {tab(routes.pipeline(), 'Pipeline', routeName === 'pipeline' || routeName === 'application')}
+      {tab(routes.evidence(), 'Evidence', routeName === 'evidence')}
       {tab(routes.profiles(), 'Role profiles', routeName === 'profiles')}
       {tab(routes.cv(), 'CV locker', routeName === 'cv')}
       {tab(routes.settings(), 'Settings', routeName === 'settings')}

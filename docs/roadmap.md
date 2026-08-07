@@ -21,14 +21,15 @@ effort.
 > [setup-supabase.md](setup-supabase.md). The schema, RLS, and triggers are
 > already written in `supabase/migrations/`.
 
-## ⏳ Phase 2 — evidence bank & profiles (data layer ready)
+## ✅ Phase 2 — evidence bank & profiles (built, offline)
 
-The `evidence`, `capabilities`, and coverage pieces already exist in the model
-and store. Still to build as a first-class screen:
+- Evidence bank screen: master-detail with search across title/bullet/full_text,
+  capability filter, a half-finished-only filter, both length fields side by
+  side, half-finished flags, and `use_count`
+- Role profiles, capability vocabulary, and the coverage view (built in Phase 1)
 
-- Evidence bank list: search across title/bullet/full_text, capability filter,
-  both length fields side by side, flag half-finished items, show `use_count`
-- (Role profiles and coverage view are already present)
+`use_count` / `last_used_at` are bumped by the composer (Phase 3); until then
+they reflect sample data and stay at zero for hand-entered items.
 
 ## ⏳ Phase 3 — composer
 
