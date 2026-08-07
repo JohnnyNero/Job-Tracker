@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Job Tracker</title>
+    <!--
+      The app uses hash-based routing (#/...), so real navigation never hits
+      this file. It exists only as a safety net: if GitHub Pages serves a
+      genuinely unknown path, bounce back to the app root. Pages has no SPA
+      fallback, so this file must be shipped alongside index.html.
+    -->
+    <script>
+      // Preserve any hash the user may have had, then redirect to the app root.
+      var base = '/job-tracker/'
+      location.replace(base + (location.hash || ''))
+    </script>
+  </head>
+  <body>
+    Redirecting to <a href="/job-tracker/">Job Tracker</a>&hellip;
+  </body>
+</html>

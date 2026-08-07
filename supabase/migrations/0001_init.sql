@@ -1,0 +1,224 @@
+-- Job Tracker — initial schema, RLS, and triggers.
+--
+-- Run this in the Supabase SQL editor (or via the CLI) BEFORE deploying app
+-- code that talks to Supabase. Then verify RLS with a signed-out client
+-- (see docs/setup-supabase.md) — do not assume RLS is on just because this ran.
+--
+-- Security model: the anon key ships in the client bundle and is public.
+-- Every table therefore has RLS enabled with policies scoped to auth.uid().
+-- Single user (you), Supabase magic-link auth. The service_role key must never
+-- appear in this repo or in CI.
+
+create extension if not exists pgcrypto;  -- gen_random_uuid()
+
+-- ---------------------------------------------------------------------------
+-- Tables
+-- ---------------------------------------------------------------------------
+
+-- Canonical capability vocabulary. Small, hand-curated, ~15-25 entries.
+create table if not exists capabilities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  name text not null unique,          -- "cost control", "handling conflict"
+  note text                           -- what I mean by it, for my own consistency
+);
+
+-- Role profiles: the framing layer.
+create table if not exists role_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  name text not null,                 -- "General operations manager"
+  positioning text,                   -- the two-line pitch for this kind of role
+  priority_capabilities text[] not null default '{}',
+  vocabulary text,                    -- terms this sector uses; free text notes
+  created_at timestamptz not null default now()
+);
+
+-- Evidence bank: bullets and answers are the same thing at different lengths.
+create table if not exists evidence (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  title text not null,                -- "Rebuilt the kitchen prep rota"
+  bullet text,                        -- one line, CV length
+  full_text text,                     -- situation / action / result, answer length
+  capabilities text[] not null default '{}',
+  when_happened text,                 -- free text; "2024", "first year at the cinema"
+  use_count int not null default 0,
+  last_used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists evidence_capabilities_gin on evidence using gin (capabilities);
+
+-- CV locker: the finished files I actually sent.
+create table if not exists cv_versions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  label text not null,                -- "ops-v3"
+  profile_id uuid references role_profiles on delete set null,
+  angle text,                         -- what this version leans into
+  file_path text,                     -- Supabase Storage path
+  is_current boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- Applications
+create table if not exists applications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  role text not null,
+  company text,
+  profile_id uuid references role_profiles on delete set null,
+  stage text not null default 'drafting'
+    check (stage in ('drafting','applied','acknowledged','shortlisted',
+                     'interview','final_stage','offer','closed')),
+  outcome text                        -- set only when stage = 'closed'
+    check (outcome is null or outcome in ('rejected','withdrew','no_response','accepted')),
+  closed_from_stage text,             -- which stage it died at; set by trigger on close
+  source text,                        -- Indeed, LinkedIn, direct, referral
+  link text,
+  ad_text text,                       -- archived at capture; the listing will 404
+  location text,
+  salary_stated text,                 -- free text; ranges and "competitive" both happen
+  applied_on date,
+  closes_on date,
+  cv_version_id uuid references cv_versions on delete set null,
+  told_them text,                     -- salary quoted, notice period, anything committed to
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Which evidence went into which application
+create table if not exists application_evidence (
+  application_id uuid not null references applications on delete cascade,
+  evidence_id uuid not null references evidence on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  primary key (application_id, evidence_id)
+);
+
+-- Criteria pulled from the ad (phase 4)
+create table if not exists criteria (
+  id uuid primary key default gen_random_uuid(),
+  application_id uuid not null references applications on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  text text not null,
+  essential boolean not null default true,
+  covered_by uuid references evidence on delete set null,
+  position int not null default 0
+);
+
+-- Timeline: stage changes and free-text notes
+create table if not exists events (
+  id uuid primary key default gen_random_uuid(),
+  application_id uuid not null references applications on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  kind text not null check (kind in ('stage','note','contact')),
+  body text not null,
+  occurred_at timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- Row Level Security — same policy shape on every table.
+-- ---------------------------------------------------------------------------
+
+alter table capabilities        enable row level security;
+alter table role_profiles       enable row level security;
+alter table evidence            enable row level security;
+alter table cv_versions         enable row level security;
+alter table applications        enable row level security;
+alter table application_evidence enable row level security;
+alter table criteria            enable row level security;
+alter table events              enable row level security;
+
+-- Postgres has no "create policy if not exists"; drop then create so this file
+-- is safe to re-run.
+drop policy if exists "own rows" on capabilities;
+create policy "own rows" on capabilities
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on role_profiles;
+create policy "own rows" on role_profiles
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on evidence;
+create policy "own rows" on evidence
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on cv_versions;
+create policy "own rows" on cv_versions
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on applications;
+create policy "own rows" on applications
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on application_evidence;
+create policy "own rows" on application_evidence
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on criteria;
+create policy "own rows" on criteria
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on events;
+create policy "own rows" on events
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Triggers
+-- ---------------------------------------------------------------------------
+
+-- 1 + 2) Before every update: keep updated_at current, and manage the
+-- stage/outcome bookkeeping around closing and reopening.
+create or replace function applications_before_update()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+
+  if new.stage = 'closed' and old.stage is distinct from 'closed' then
+    -- record where it died
+    new.closed_from_stage := old.stage;
+  elsif new.stage <> 'closed' and old.stage = 'closed' then
+    -- reopened: clear the closed-only fields
+    new.closed_from_stage := null;
+    new.outcome := null;
+  end if;
+
+  return new;
+end $$;
+
+drop trigger if exists applications_before_update on applications;
+create trigger applications_before_update
+  before update on applications
+  for each row execute function applications_before_update();
+
+-- 3) After a stage change: append a 'stage' event. Stage history is automatic;
+-- it is never logged by hand.
+create or replace function applications_log_stage()
+returns trigger language plpgsql as $$
+begin
+  if new.stage is distinct from old.stage then
+    insert into events (application_id, user_id, kind, body, occurred_at)
+    values (
+      new.id,
+      new.user_id,
+      'stage',
+      case
+        when new.stage = 'closed'
+          then 'Closed (' || coalesce(new.outcome, '?') || ') from '
+               || coalesce(new.closed_from_stage, old.stage)
+        when old.stage = 'closed'
+          then 'Reopened → ' || new.stage
+        else old.stage || ' → ' || new.stage
+      end,
+      now()
+    );
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists applications_log_stage on applications;
+create trigger applications_log_stage
+  after update on applications
+  for each row execute function applications_log_stage();
