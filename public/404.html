@@ -11,7 +11,8 @@
     -->
     <script>
       // Preserve any hash the user may have had, then redirect to the app root.
-      var base = '/job-tracker/'
+      // Case-sensitive path — must match the repo name exactly.
+      var base = '/Job-Tracker/'
       location.replace(base + (location.hash || ''))
     </script>
   </head>

@@ -79,6 +79,6 @@ ready store template in [supabase-store-template.ts](supabase-store-template.ts)
 - `npm run build` — typecheck (`tsc -b`) then Vite build to `dist/`.
 - `npm run preview` — serve the production build locally.
 - GitHub Actions (`.github/workflows/deploy.yml`) builds on push to `main` and
-  publishes `dist/` to Pages. Vite `base` is `/job-tracker/`; `public/404.html`
-  is the Pages fallback. Supabase env vars come from repo secrets (empty until
-  you add them).
+  publishes `dist/` to Pages. Vite `base` is `/Job-Tracker/` (case-sensitive —
+  matches the repo name exactly); `public/404.html` is the Pages fallback.
+  Supabase env vars come from repo secrets (empty until you add them).

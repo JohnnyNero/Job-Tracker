@@ -86,9 +86,11 @@ Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
    before shipping any online code.
 4. **Never commit secrets.** Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
    ever ship (both public). The `service_role` key goes nowhere near this repo.
-5. **Base path.** GitHub Pages serves at `/job-tracker/`; Vite `base` is set
-   accordingly and `public/404.html` is the Pages fallback. Keep them in sync if
-   the repo is renamed (override via `VITE_BASE`).
+5. **Base path is case-sensitive.** GitHub Pages serves this repo at
+   `/Job-Tracker/` — the path segment matches the repo name's case exactly. Vite
+   `base` and `public/404.html` must both use `/Job-Tracker/`, or the page loads
+   but its assets 404 and you get a blank screen. Keep them in sync if the repo
+   is renamed (override via `VITE_BASE`).
 6. **`overflow-x: auto` makes a scroll container on both axes.** The pipeline's
    sticky header sticks to the top of `.table-wrap` (which is a scroll box) — see
    the comment in `src/styles/app.css`. Don't reintroduce a page-relative sticky
