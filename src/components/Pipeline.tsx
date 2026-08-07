@@ -4,6 +4,8 @@ import type { Application, Stage } from '../types'
 import { STAGES } from '../types'
 import { STAGE_LABELS, STAGE_TONE, LIVE_STAGES, AWAITING_STAGES } from '../lib/constants'
 import { daysSignal, fmtDate } from '../lib/dates'
+import { buildTriage } from '../lib/triage'
+import type { TriagedApp } from '../lib/triage'
 import { navigate, routes } from '../router'
 import { EmptyState, isTypingTarget } from './common'
 import { NewApplicationDialog } from './NewApplicationDialog'
@@ -209,6 +211,7 @@ export function Pipeline() {
   const liveCount = apps.filter((a) => LIVE_STAGES.includes(a.stage)).length
   const awaitingCount = apps.filter((a) => AWAITING_STAGES.includes(a.stage)).length
   const evidenceCount = store.data.evidence.length
+  const triage = useMemo(() => buildTriage(apps), [apps])
 
   const isEmpty = apps.length === 0
 
@@ -225,6 +228,12 @@ export function Pipeline() {
 
       <div className="tally">
         <div className="stat">
+          <span className="n" style={triage.length ? { color: 'var(--tone-red-fg)' } : undefined}>
+            {triage.length}
+          </span>
+          <span className="l">need you</span>
+        </div>
+        <div className="stat">
           <span className="n">{liveCount}</span>
           <span className="l">live</span>
         </div>
@@ -237,6 +246,8 @@ export function Pipeline() {
           <span className="l">evidence in bank</span>
         </div>
       </div>
+
+      {!isEmpty && <TriagePanel items={triage} />}
 
       {isEmpty ? (
         <EmptyState
@@ -348,6 +359,55 @@ export function Pipeline() {
         />
       )}
       {showHelp && <ShortcutsHelp onClose={() => setShowHelp(false)} />}
+    </div>
+  )
+}
+
+function TriagePanel({ items }: { items: TriagedApp[] }) {
+  const store = useStore()
+  if (items.length === 0) {
+    return <div className="triage caught-up">✓ All caught up — nothing to chase today.</div>
+  }
+  return (
+    <div className="triage">
+      <div className="triage-head">
+        <h2>Needs you</h2>
+        <span className="count">{items.length}</span>
+        <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+          — chase, snooze, or close. Follow-up nudges fire ~1 week after you apply.
+        </span>
+      </div>
+      <ul>
+        {items.map(({ app, item }) => (
+          <li key={app.id} className="triage-row">
+            <span className={`t-flag ${item.tone}`}>{item.label}</span>
+            <button className="t-open" onClick={() => navigate(routes.application(app.id))}>
+              <b>{app.role}</b>
+              {app.company ? ` · ${app.company}` : ''}
+            </button>
+            <span className="t-actions">
+              {item.canFollowUp && (
+                <button className="btn small" onClick={() => store.logFollowUp(app.id)} title="Logs a contact and snoozes ~1 week">
+                  Log follow-up
+                </button>
+              )}
+              <button className="btn small" onClick={() => store.snoozeApplication(app.id, 7)}>
+                Snooze 1wk
+              </button>
+              {item.canGhost && (
+                <button className="btn small danger" onClick={() => store.closeApplication(app.id, 'no_response')}>
+                  Mark ghosted
+                </button>
+              )}
+              {item.reason === 'closing' && (
+                <button className="btn small primary" onClick={() => navigate(routes.application(app.id))}>
+                  Finish
+                </button>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

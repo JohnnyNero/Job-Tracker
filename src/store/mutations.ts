@@ -12,6 +12,7 @@ import type {
 } from '../types'
 import { STAGE_LABELS, OUTCOME_LABELS } from '../lib/constants'
 import { newId, nowIso } from '../lib/id'
+import { addBusinessDaysIso } from '../lib/dates'
 
 // Pure mutations: (dataset, args) -> new dataset. No I/O. These encode the
 // business rules the Postgres triggers will enforce online, so behaviour is
@@ -64,6 +65,7 @@ export function addApplication(data: Dataset, input: NewApplication): [Dataset, 
     salary_stated: input.salary_stated ?? null,
     applied_on: input.applied_on ?? null,
     closes_on: input.closes_on ?? null,
+    next_action_at: input.next_action_at ?? null,
     cv_version_id: input.cv_version_id ?? null,
     told_them: input.told_them ?? null,
     notes: input.notes ?? null,
@@ -100,11 +102,18 @@ export function changeStage(data: Dataset, id: string, stage: Stage): Dataset {
     return closeApplication(data, id, 'no_response')
   }
   const wasClosed = existing.stage === 'closed'
+  // Follow-up nudge: entering 'applied' with no reminder set defaults to +7
+  // business days, so the application surfaces in the triage queue on its own.
+  const nextAction =
+    stage === 'applied' && !existing.next_action_at
+      ? addBusinessDaysIso(7)
+      : existing.next_action_at
   const updated: Application = {
     ...existing,
     stage,
     outcome: wasClosed ? null : existing.outcome,
     closed_from_stage: wasClosed ? null : existing.closed_from_stage,
+    next_action_at: nextAction,
     updated_at: nowIso(),
   }
   const body = wasClosed
@@ -137,6 +146,37 @@ export function closeApplication(data: Dataset, id: string, outcome: Outcome): D
     applications: replace(data.applications, updated),
     events: [...data.events, makeEvent(id, 'stage', body)],
   }
+}
+
+/** Log a follow-up: append a contact event and push the next-action nudge out
+ * +7 business days, so it leaves the triage queue until then. */
+export function logFollowUp(data: Dataset, id: string): Dataset {
+  const existing = data.applications.find((a) => a.id === id)
+  if (!existing) return data
+  const updated: Application = {
+    ...existing,
+    next_action_at: addBusinessDaysIso(7),
+    updated_at: nowIso(),
+  }
+  return {
+    ...data,
+    applications: replace(data.applications, updated),
+    events: [...data.events, makeEvent(id, 'contact', 'Followed up')],
+  }
+}
+
+/** Snooze the triage nudge by N calendar days. */
+export function snoozeApplication(data: Dataset, id: string, days: number): Dataset {
+  const existing = data.applications.find((a) => a.id === id)
+  if (!existing) return data
+  const from = new Date()
+  from.setDate(from.getDate() + days)
+  const updated: Application = {
+    ...existing,
+    next_action_at: from.toISOString().slice(0, 10),
+    updated_at: nowIso(),
+  }
+  return { ...data, applications: replace(data.applications, updated) }
 }
 
 export function deleteApplication(data: Dataset, id: string): Dataset {

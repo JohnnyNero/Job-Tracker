@@ -32,6 +32,8 @@ interface StoreValue {
   ) => void
   changeStage: (id: string, stage: Stage) => void
   closeApplication: (id: string, outcome: Outcome) => void
+  logFollowUp: (id: string) => void
+  snoozeApplication: (id: string, days: number) => void
   deleteApplication: (id: string) => void
 
   // events
@@ -117,6 +119,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateApplication: (id, patch) => run((d) => m.updateApplication(d, id, patch)),
     changeStage: (id, stage) => run((d) => m.changeStage(d, id, stage)),
     closeApplication: (id, outcome) => run((d) => m.closeApplication(d, id, outcome)),
+    logFollowUp: (id) => run((d) => m.logFollowUp(d, id)),
+    snoozeApplication: (id, days) => run((d) => m.snoozeApplication(d, id, days)),
     deleteApplication: (id) => run((d) => m.deleteApplication(d, id)),
 
     addEvent: (applicationId, kind, body) => run((d) => m.addEvent(d, applicationId, kind, body)),

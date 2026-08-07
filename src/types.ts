@@ -94,6 +94,9 @@ export interface Application {
   applied_on: string | null
   /** ISO date (YYYY-MM-DD) or null. */
   closes_on: string | null
+  /** When this application next needs attention (follow-up nudge / snooze).
+   * ISO date (YYYY-MM-DD) or null. Drives the "Needs you" triage queue. */
+  next_action_at: string | null
   cv_version_id: string | null
   /** Salary quoted, notice period, anything committed to. */
   told_them: string | null

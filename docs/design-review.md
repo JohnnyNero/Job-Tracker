@@ -154,12 +154,14 @@ store-mediated architecture.
 3. **Auto-extract criteria at capture.** ✅ On create, the ad is split into a criteria checklist for
    the new application, so our best structural feature is zero-effort output.
 
-### Tier 2 — Turn "days silent" into an action queue
-4. **A "Needs you" triage view** over the signal we already compute: stale (≥14 days Applied) and
-   ghosted (≥30 days) rows as a short to-do list with one-key actions — *log follow-up*, *mark
-   ghosted*, *snooze N days*.
-5. **Per-application `next_action_at` + snooze**, defaulting a follow-up nudge to +7 business days
-   on entering "Applied" — removes the timing guesswork.
+### Tier 2 — Turn "days silent" into an action queue · ✅ shipped
+4. **A "Needs you" triage view.** ✅ A ranked panel at the top of the pipeline (and a "need you"
+   tally): follow-up-due, stale (≥14d), ghosted (≥30d), and closing-soon drafts, each with one-click
+   *Log follow-up* (adds a contact event and pushes the nudge +1 week), *Snooze 1wk*, and *Mark
+   ghosted*. Logic in `src/lib/triage.ts`; empty state is a green "all caught up".
+5. **Per-application `next_action_at` + snooze.** ✅ New field on applications; entering "Applied"
+   auto-sets a follow-up nudge to +7 business days, and a snooze in the future suppresses the
+   nudge until then. Schema mirrored in `0001_init.sql`.
 
 ### Tier 3 — Make tailoring & memory cheap
 6. **Criteria → evidence auto-suggest** by capability tag, with per-app coverage gaps flagged. This

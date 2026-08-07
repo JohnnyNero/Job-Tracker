@@ -82,6 +82,7 @@ create table if not exists applications (
   salary_stated text,                 -- free text; ranges and "competitive" both happen
   applied_on date,
   closes_on date,
+  next_action_at date,               -- follow-up nudge / snooze; drives the triage queue
   cv_version_id uuid references cv_versions on delete set null,
   told_them text,                     -- salary quoted, notice period, anything committed to
   notes text,
@@ -183,6 +184,16 @@ begin
     -- reopened: clear the closed-only fields
     new.closed_from_stage := null;
     new.outcome := null;
+  end if;
+
+  -- Follow-up nudge: when an application first reaches 'applied', default a
+  -- next_action_at if none is set. The offline store uses +7 BUSINESS days
+  -- (src/store/mutations.ts changeStage); this trigger uses a calendar
+  -- approximation. If you need exact parity online, replace with a
+  -- business-day calculation.
+  if new.stage = 'applied' and old.stage is distinct from 'applied'
+     and new.next_action_at is null then
+    new.next_action_at := (now() + interval '9 days')::date;  -- ~7 business days
   end if;
 
   return new;

@@ -146,6 +146,7 @@ export function sampleDataset(): Dataset {
     applications: [
       {
         id: appDraftingClosing,
+        next_action_at: null,
         role: 'Operations Manager',
         company: 'Riverside Leisure',
         profile_id: opsProfile,
@@ -168,6 +169,7 @@ export function sampleDataset(): Dataset {
       },
       {
         id: appSilentAmber,
+        next_action_at: null,
         role: 'Duty Manager',
         company: 'Vue Cinemas',
         profile_id: dutyProfile,
@@ -190,6 +192,7 @@ export function sampleDataset(): Dataset {
       },
       {
         id: appSilentRed,
+        next_action_at: null,
         role: 'Site Manager',
         company: 'ParkLife Ltd',
         profile_id: opsProfile,
@@ -212,6 +215,7 @@ export function sampleDataset(): Dataset {
       },
       {
         id: appInterview,
+        next_action_at: daysAgoDate(2),
         role: 'Assistant Operations Manager',
         company: 'Odeon',
         profile_id: opsProfile,
@@ -234,6 +238,7 @@ export function sampleDataset(): Dataset {
       },
       {
         id: appClosed,
+        next_action_at: null,
         role: 'Venue Manager',
         company: 'The Warehouse',
         profile_id: dutyProfile,

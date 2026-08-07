@@ -32,7 +32,9 @@ There are deliberately **no per-sector copies** of an evidence item.
 - **cv_versions** — finished files actually sent. Roughly one base CV per
   profile. `file_path` is a name/link offline, a Storage path online.
 - **applications** — the core record. Stage, outcome, the archived `ad_text`,
-  and `told_them` (what you committed to on a call).
+  `told_them` (what you committed to on a call), and `next_action_at` (the
+  follow-up nudge / snooze that drives the "Needs you" triage queue; auto-set to
+  +7 business days on entering `applied`).
 - **application_evidence** — join: which evidence went into which application.
 - **criteria** — ad criteria checklist (Phase 4).
 - **events** — the timeline: automatic `stage` rows plus manual `note`/`contact`.

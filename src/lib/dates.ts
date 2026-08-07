@@ -91,3 +91,37 @@ export function fmtDateTime(s: string): string {
 export function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10)
 }
+
+/** A date N calendar days from `from`, as YYYY-MM-DD. */
+export function addDaysIso(days: number, from = new Date()): string {
+  const d = new Date(from)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/** A date N business days (skipping Sat/Sun) from `from`, as YYYY-MM-DD.
+ * Used for the follow-up nudge default. */
+export function addBusinessDaysIso(n: number, from = new Date()): string {
+  const d = new Date(from)
+  let added = 0
+  while (added < n) {
+    d.setDate(d.getDate() + 1)
+    const day = d.getDay()
+    if (day !== 0 && day !== 6) added++
+  }
+  return d.toISOString().slice(0, 10)
+}
+
+/** Whole days elapsed since a date (today - date), or null. */
+export function daysSince(s: string | null, today = new Date()): number | null {
+  const d = parseDate(s)
+  if (!d) return null
+  return daysBetween(d, today)
+}
+
+/** Whole days until a date (date - today), negative if past, or null. */
+export function daysUntil(s: string | null, today = new Date()): number | null {
+  const d = parseDate(s)
+  if (!d) return null
+  return daysBetween(today, d)
+}
