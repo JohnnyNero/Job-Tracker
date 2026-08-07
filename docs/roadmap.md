@@ -31,12 +31,17 @@ effort.
 `use_count` / `last_used_at` are bumped by the composer (Phase 3); until then
 they reflect sample data and stay at zero for hand-entered items.
 
-## ⏳ Phase 3 — composer
+## ✅ Phase 3 — composer (built, offline)
 
-- Three panes: criteria/question · filtered evidence bank · writing pane
-- Click-to-insert at cursor, drag to reorder, "Copy all"
-- Concatenates only — never rewrites or generates
-- Copying records `application_evidence` and bumps `use_count`
+- Three panes: the question/positioning · the evidence bank filtered to the
+  application profile's priority capabilities · the draft
+- Click-to-insert (bullet or full text) as reorderable blocks; drag or the
+  up/down buttons to arrange; "Copy all" concatenates to the clipboard
+- Concatenates only — never rewrites, blends, or generates
+- Edits in a block stay local unless you "Save changes to this item"
+- "Copy all" records `application_evidence` links and bumps `use_count` /
+  `last_used_at` for each distinct item used
+- Launched from the application detail screen (`#/compose/:id`)
 
 ## ⏳ Phase 4 — criteria checklist
 

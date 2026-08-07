@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 export type Route =
   | { name: 'pipeline' }
   | { name: 'application'; id: string }
+  | { name: 'compose'; id: string }
   | { name: 'evidence' }
   | { name: 'profiles' }
   | { name: 'cv' }
@@ -22,6 +23,8 @@ function parse(hash: string): Route {
   switch (parts[0]) {
     case 'app':
       return parts[1] ? { name: 'application', id: parts[1] } : { name: 'pipeline' }
+    case 'compose':
+      return parts[1] ? { name: 'compose', id: parts[1] } : { name: 'pipeline' }
     case 'evidence':
       return { name: 'evidence' }
     case 'profiles':
@@ -59,6 +62,7 @@ export function navigate(path: string): void {
 export const routes = {
   pipeline: () => '#/',
   application: (id: string) => `#/app/${id}`,
+  compose: (id: string) => `#/compose/${id}`,
   evidence: () => '#/evidence',
   profiles: () => '#/profiles',
   cv: () => '#/cv',

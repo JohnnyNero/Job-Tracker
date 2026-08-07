@@ -515,6 +515,61 @@ table.pipeline td.company-cell {
   margin-left: 6px;
 }
 
+/* ------------------------------------------------------------------ composer */
+.composer-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(280px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .composer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.compose-pane .panel + .panel {
+  margin-top: 16px;
+}
+.ev-scroll {
+  max-height: calc(100vh - var(--h-nav) - 230px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ev-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--surface-2);
+}
+.draft-block {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--surface);
+}
+.draft-block:last-child {
+  margin-bottom: 0;
+}
+.draft-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.drag-handle {
+  cursor: grab;
+  color: var(--text-3);
+  padding: 0 4px;
+  font-size: 15px;
+  line-height: 1;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
 /* ------------------------------------------------------------------ cards */
 .card-list {
   display: grid;

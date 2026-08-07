@@ -58,6 +58,9 @@ interface StoreValue {
   updateCvVersion: (id: string, patch: Partial<Omit<CvVersion, 'id' | 'created_at'>>) => void
   deleteCvVersion: (id: string) => void
 
+  // composer
+  recordEvidenceUse: (applicationId: string, evidenceIds: string[]) => void
+
   // whole-dataset ops (export / import / sample / reset)
   replaceAll: (data: Dataset) => void
 }
@@ -124,6 +127,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addCvVersion: (label) => runCreate((d) => m.addCvVersion(d, label)),
     updateCvVersion: (id, patch) => run((d) => m.updateCvVersion(d, id, patch)),
     deleteCvVersion: (id) => run((d) => m.deleteCvVersion(d, id)),
+
+    recordEvidenceUse: (applicationId, evidenceIds) =>
+      run((d) => m.recordEvidenceUse(d, applicationId, evidenceIds)),
 
     replaceAll: (incoming) => commit(normaliseDataset(incoming)),
   }

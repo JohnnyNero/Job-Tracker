@@ -305,6 +305,39 @@ export function deleteCvVersion(data: Dataset, id: string): Dataset {
 }
 
 // ---------------------------------------------------------------------------
+// composer usage (Phase 3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Record that a set of evidence items was used in an application (on "Copy
+ * all"): link each in application_evidence if not already linked, and bump its
+ * use_count + last_used_at once. Idempotent per copy for a given id set.
+ */
+export function recordEvidenceUse(
+  data: Dataset,
+  applicationId: string,
+  evidenceIds: string[],
+): Dataset {
+  const unique = Array.from(new Set(evidenceIds))
+  if (unique.length === 0) return data
+  const now = nowIso()
+
+  const links = [...data.application_evidence]
+  for (const evidenceId of unique) {
+    const exists = links.some(
+      (ae) => ae.application_id === applicationId && ae.evidence_id === evidenceId,
+    )
+    if (!exists) links.push({ application_id: applicationId, evidence_id: evidenceId })
+  }
+
+  const evidence = data.evidence.map((e) =>
+    unique.includes(e.id) ? { ...e, use_count: e.use_count + 1, last_used_at: now } : e,
+  )
+
+  return { ...data, application_evidence: links, evidence }
+}
+
+// ---------------------------------------------------------------------------
 // criteria (Phase 4 groundwork — kept minimal for now)
 // ---------------------------------------------------------------------------
 
