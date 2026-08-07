@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../store/store'
 import type { Criterion } from '../types'
 import { splitCriteria } from '../lib/criteria'
+import { suggestEvidence } from '../lib/suggest'
 
 // The criteria checklist for one application (Phase 4). Paste/extract candidate
 // criteria from the ad, then edit them by hand and link each to an evidence
@@ -94,9 +95,11 @@ function CriterionRow({ c, first, last }: { c: Criterion; first: boolean; last: 
   const store = useStore()
   const evidence = store.data.evidence
   const covered = !!c.covered_by
+  const suggestions = covered ? [] : suggestEvidence(c.text, evidence)
 
   return (
-    <div className="crit-row">
+    <div className="crit-item">
+      <div className="crit-row">
       <button
         className={`chip selectable ${c.essential ? 'on' : ''}`}
         style={{ whiteSpace: 'nowrap' }}
@@ -139,6 +142,22 @@ function CriterionRow({ c, first, last }: { c: Criterion; first: boolean; last: 
       <button className="btn ghost small" onClick={() => store.deleteCriterion(c.id)} aria-label="Delete criterion" title="Delete">
         ×
       </button>
+      </div>
+      {!covered && suggestions.length > 0 && (
+        <div className="crit-suggest">
+          <span className="muted">Suggested:</span>
+          {suggestions.map((s) => (
+            <button
+              key={s.evidence.id}
+              className="chip selectable"
+              onClick={() => store.updateCriterion(c.id, { covered_by: s.evidence.id })}
+              title="Link this evidence to the criterion"
+            >
+              ↳ {s.evidence.title}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

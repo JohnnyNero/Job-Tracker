@@ -163,12 +163,15 @@ store-mediated architecture.
    auto-sets a follow-up nudge to +7 business days, and a snooze in the future suppresses the
    nudge until then. Schema mirrored in `0001_init.sql`.
 
-### Tier 3 — Make tailoring & memory cheap
-6. **Criteria → evidence auto-suggest** by capability tag, with per-app coverage gaps flagged. This
-   is the feature *no competitor has*.
-7. **"Told them" → per-stage log** (append-only events) so what you committed to survives.
-8. **Snapshot the sent draft** per application; add a "you've reused this bullet in overlapping
-   roles" warning alongside `use_count`.
+### Tier 3 — Make tailoring & memory cheap · ✅ shipped
+6. **Criteria → evidence auto-suggest.** ✅ Uncovered criteria show suggested evidence chips
+   (offline token-overlap + capability-name match, `src/lib/suggest.ts`); one click links it and the
+   per-app coverage badge updates. The feature no competitor has.
+7. **"Told them" → dated log.** ✅ An append-only commitments log built on `told` events, each
+   timestamped; any legacy single-field note is preserved and pinned. Kept out of the main timeline.
+8. **Snapshot the sent draft.** ✅ "Copy all" in the composer records the composed text as a `draft`
+   event; a "Drafts sent" panel on the application lets you re-read or re-copy any past version. The
+   composer also flags evidence "already used in N other applications" as a reuse cue.
 
 ### Tier 4 — Reduce switching cost & prove ROI
 9. **CSV/Sheets import** mapped into the Dataset (2-minute migration for spreadsheet-quitters).

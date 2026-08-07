@@ -46,6 +46,17 @@ export function Composer({ id }: { id: string }) {
     () => new Map(store.data.evidence.map((e) => [e.id, e])),
     [store.data.evidence],
   )
+  // How many OTHER applications each evidence item is already linked to — a
+  // gentle "you're reusing this" cue.
+  const otherUse = useMemo(() => {
+    const m = new Map<string, Set<string>>()
+    for (const ae of store.data.application_evidence) {
+      if (ae.application_id === id) continue
+      if (!m.has(ae.evidence_id)) m.set(ae.evidence_id, new Set())
+      m.get(ae.evidence_id)!.add(ae.application_id)
+    }
+    return m
+  }, [store.data.application_evidence, id])
 
   const evidence = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -124,6 +135,9 @@ export function Composer({ id }: { id: string }) {
       app!.id,
       blocks.map((b) => b.evidenceId),
     )
+    // Snapshot the composed draft against the application ("which version did I
+    // send here?").
+    store.addEvent(app!.id, 'draft', text)
     const distinct = new Set(blocks.map((b) => b.evidenceId)).size
     flashMsg(
       (ok ? 'Copied' : 'Could not access clipboard — select and copy manually.') +
@@ -265,6 +279,12 @@ export function Composer({ id }: { id: string }) {
                 evidence.map((e) => (
                   <div key={e.id} className="ev-card">
                     <div style={{ fontWeight: 600 }}>{e.title}</div>
+                    {(otherUse.get(e.id)?.size ?? 0) > 0 && (
+                      <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                        already used in {otherUse.get(e.id)!.size} other application
+                        {otherUse.get(e.id)!.size === 1 ? '' : 's'}
+                      </div>
+                    )}
                     {e.capabilities.length > 0 && (
                       <div className="chips" style={{ margin: '6px 0' }}>
                         {e.capabilities.map((c) => (

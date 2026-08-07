@@ -614,6 +614,26 @@ table.pipeline td.company-cell {
     flex-wrap: wrap;
   }
 }
+.crit-suggest {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 0 2px;
+  margin-left: 76px;
+  font-size: 12px;
+}
+.crit-suggest .muted {
+  font-size: 11px;
+}
+.crit-suggest .chip {
+  font-size: 11px;
+}
+@media (max-width: 720px) {
+  .crit-suggest {
+    margin-left: 0;
+  }
+}
 .crit-ref {
   list-style: none;
   margin: 0 0 12px;
@@ -701,6 +721,36 @@ table.pipeline td.company-cell {
 }
 .drag-handle:active {
   cursor: grabbing;
+}
+
+/* ------------------------------------------------------------------ told log / drafts */
+.tell-log {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tell-log li {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  align-items: flex-start;
+}
+.tell-log li .body {
+  flex: 1;
+}
+.tell-log .when {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.draft-snap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--surface-2);
 }
 
 /* ------------------------------------------------------------------ cards */

@@ -22,7 +22,9 @@ export type Stage = (typeof STAGES)[number]
 export const OUTCOMES = ['rejected', 'withdrew', 'no_response', 'accepted'] as const
 export type Outcome = (typeof OUTCOMES)[number]
 
-export type EventKind = 'stage' | 'note' | 'contact'
+// stage/note/contact are the timeline kinds; 'told' is an append-only
+// commitment log (what you told them); 'draft' snapshots a composed draft.
+export type EventKind = 'stage' | 'note' | 'contact' | 'told' | 'draft'
 
 export interface Capability {
   id: string

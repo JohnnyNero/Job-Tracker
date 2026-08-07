@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store/store'
-import type { AppEvent, Stage } from '../types'
+import type { AppEvent, Application, Stage } from '../types'
 import { STAGES } from '../types'
 import { STAGE_LABELS, STAGE_TONE, OUTCOME_LABELS, SOURCE_SUGGESTIONS } from '../lib/constants'
 import { fmtDateTime } from '../lib/dates'
@@ -60,8 +60,9 @@ export function ApplicationDetail({ id }: { id: string }) {
   }
 
   const tone = STAGE_TONE[app.stage]
+  // 'told' and 'draft' have their own panels, so keep them out of the timeline.
   const events = store.data.events
-    .filter((e) => e.application_id === app.id)
+    .filter((e) => e.application_id === app.id && e.kind !== 'told' && e.kind !== 'draft')
     .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
 
   return (
@@ -179,16 +180,11 @@ export function ApplicationDetail({ id }: { id: string }) {
 
           <div className="panel">
             <h2>Told them</h2>
-            <p className="section-note" style={{ marginTop: 0, marginBottom: 8 }}>
-              Salary quoted, notice period, start date &mdash; anything you committed to. This is the
-              field that saves you when someone rings six weeks later.
+            <p className="section-note" style={{ marginTop: 0, marginBottom: 10 }}>
+              Salary quoted, notice period, start date &mdash; each entry is dated, so what you
+              committed to survives when someone rings six weeks later.
             </p>
-            <TextArea
-              value={app.told_them ?? ''}
-              rows={3}
-              onCommit={(v) => set({ told_them: v || null })}
-              placeholder="e.g. Quoted 1 month notice; said £34k current, seeking £38k+."
-            />
+            <TellLog app={app} />
             <hr className="hr" />
             <h2>Notes</h2>
             <TextArea
@@ -219,6 +215,8 @@ export function ApplicationDetail({ id }: { id: string }) {
               </ul>
             )}
           </div>
+
+          <DraftsPanel app={app} />
         </div>
 
         {/* RIGHT: the archived ad, sticky and tall */}
@@ -293,6 +291,119 @@ function TimelineItem({ ev, onDelete }: { ev: AppEvent; onDelete?: () => void })
         </button>
       )}
     </li>
+  )
+}
+
+/** Append-only "told them" commitments log, built on 'told' events so each is
+ * dated. A legacy told_them summary (from before this was a log) shows pinned. */
+function TellLog({ app }: { app: Application }) {
+  const store = useStore()
+  const [text, setText] = useState('')
+  const entries = store.data.events
+    .filter((e) => e.application_id === app.id && e.kind === 'told')
+    .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
+
+  function add() {
+    const t = text.trim()
+    if (!t) return
+    store.addEvent(app.id, 'told', t)
+    setText('')
+  }
+
+  return (
+    <div>
+      <div className="row" style={{ gap: 8 }}>
+        <input
+          type="text"
+          className="grow"
+          placeholder="e.g. Quoted 1 month notice; said £34k current, seeking £38k+"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && add()}
+        />
+        <button className="btn" onClick={add} disabled={!text.trim()}>
+          Log
+        </button>
+      </div>
+      {app.told_them && (
+        <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
+          <span style={{ fontWeight: 600 }}>Earlier note:</span> {app.told_them}
+        </p>
+      )}
+      {entries.length > 0 && (
+        <ul className="tell-log">
+          {entries.map((e) => (
+            <li key={e.id}>
+              <div className="body">
+                <div>{e.body}</div>
+                <div className="when">{fmtDateTime(e.occurred_at)}</div>
+              </div>
+              <button
+                className="btn ghost small"
+                onClick={() => store.deleteEvent(e.id)}
+                aria-label="Delete entry"
+                title="Delete"
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/** Snapshots of drafts copied from the composer for this application, so
+ * "which version did I send here?" is answerable months later. */
+function DraftsPanel({ app }: { app: Application }) {
+  const store = useStore()
+  const drafts = store.data.events
+    .filter((e) => e.application_id === app.id && e.kind === 'draft')
+    .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
+  if (drafts.length === 0) return null
+  return (
+    <div className="panel">
+      <h2>Drafts sent</h2>
+      <p className="section-note" style={{ marginTop: 0, marginBottom: 10 }}>
+        Snapshots of what you copied from the composer for this application.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {drafts.map((d) => (
+          <DraftItem key={d.id} id={d.id} body={d.body} when={fmtDateTime(d.occurred_at)} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DraftItem({ id, body, when }: { id: string; body: string; when: string }) {
+  const store = useStore()
+  const [open, setOpen] = useState(false)
+  const preview = body.length > 140 ? body.slice(0, 140) + '…' : body
+  return (
+    <div className="draft-snap">
+      <div className="row" style={{ gap: 8, marginBottom: 4 }}>
+        <span className="when" style={{ flex: 1, fontSize: 12, color: 'var(--text-3)' }}>{when}</span>
+        <button className="btn ghost small" onClick={() => navigator.clipboard?.writeText(body)} title="Copy again">
+          Copy
+        </button>
+        <button className="btn ghost small" onClick={() => setOpen((o) => !o)}>
+          {open ? 'Less' : 'More'}
+        </button>
+        <button
+          className="btn ghost small"
+          onClick={() => confirm('Delete this draft snapshot?') && store.deleteEvent(id)}
+          aria-label="Delete draft"
+          title="Delete"
+        >
+          ×
+        </button>
+      </div>
+      <div style={{ whiteSpace: 'pre-wrap', fontSize: 13, color: 'var(--text-2)' }}>
+        {open ? body : preview}
+      </div>
+    </div>
   )
 }
 

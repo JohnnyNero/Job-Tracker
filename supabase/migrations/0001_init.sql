@@ -114,7 +114,7 @@ create table if not exists events (
   id uuid primary key default gen_random_uuid(),
   application_id uuid not null references applications on delete cascade,
   user_id uuid not null default auth.uid() references auth.users on delete cascade,
-  kind text not null check (kind in ('stage','note','contact')),
+  kind text not null check (kind in ('stage','note','contact','told','draft')),
   body text not null,
   occurred_at timestamptz not null default now()
 );
