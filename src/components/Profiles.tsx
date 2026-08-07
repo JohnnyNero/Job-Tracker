@@ -51,7 +51,7 @@ export function Profiles() {
           apply for.
         </EmptyState>
       ) : (
-        <div className="detail-grid" style={{ gridTemplateColumns: 'minmax(0, 280px) minmax(0, 1fr)' }}>
+        <div className="detail-grid master-detail">
           <div>
             <div className="panel">
               <h2>Profiles</h2>

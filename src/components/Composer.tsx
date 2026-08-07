@@ -229,7 +229,7 @@ export function Composer({ id }: { id: string }) {
 
         {/* MIDDLE: the evidence bank */}
         <div className="compose-pane">
-          <div className="panel" style={{ position: 'sticky', top: 'calc(var(--h-nav) + 16px)' }}>
+          <div className="panel sticky-pane">
             <div className="row" style={{ marginBottom: 10 }}>
               <h2 style={{ margin: 0 }}>Evidence</h2>
               <span className="spacer" style={{ flex: 1 }} />

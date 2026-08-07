@@ -77,7 +77,7 @@ export function Evidence() {
           answer are the same item at two lengths, not four copies to maintain.
         </EmptyState>
       ) : (
-        <div className="detail-grid" style={{ gridTemplateColumns: 'minmax(0, 360px) minmax(0, 1fr)' }}>
+        <div className="detail-grid master-detail">
           {/* LEFT: search, filter, list */}
           <div>
             <div className="panel">

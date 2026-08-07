@@ -622,7 +622,7 @@ table.pipeline td.company-cell {
 /* ------------------------------------------------------------------ cards */
 .card-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 16px;
 }
 .card {
@@ -795,4 +795,155 @@ kbd {
   font-size: 12px;
   color: var(--text-2);
   line-height: 1.6;
+}
+
+/* ==================================================================
+   Master-detail + sticky helpers (class-based so media queries win —
+   inline styles would block the responsive collapse)
+   ================================================================== */
+.master-detail {
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+}
+.sticky-pane {
+  position: sticky;
+  top: calc(var(--h-nav) + 16px);
+}
+
+/* ==================================================================
+   Responsive — the app is desktop-first but must fit any screen.
+   Wide content scrolls inside its own box; the page never scrolls
+   sideways. Layouts collapse to a single column as width shrinks.
+   ================================================================== */
+
+/* Tablet / small laptop */
+@media (max-width: 1080px) {
+  .master-detail {
+    grid-template-columns: 1fr;
+  }
+  /* three-pane composer and its sticky middle pane stack */
+  .sticky-pane {
+    position: static;
+  }
+  .ad-pane {
+    position: static;
+  }
+  .ad-text {
+    max-height: 60vh;
+  }
+}
+
+/* Narrow tablets / large phones */
+@media (max-width: 820px) {
+  .page {
+    padding: 14px 14px 56px;
+  }
+  .page-head {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .tally {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    gap: 16px;
+  }
+  /* Pipeline: hide lower-priority columns, keep role/company/stage/dates/days.
+     Columns: 1 Role · 2 Company · 3 Profile · 4 Stage · 5 Applied · 6 Closes
+     · 7 CV · 8 Source · 9 Days */
+  table.pipeline th:nth-child(3),
+  table.pipeline td:nth-child(3),
+  table.pipeline th:nth-child(7),
+  table.pipeline td:nth-child(7),
+  table.pipeline th:nth-child(8),
+  table.pipeline td:nth-child(8) {
+    display: none;
+  }
+  .ev-scroll {
+    max-height: none;
+  }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  :root {
+    --h-nav: 48px;
+  }
+  .nav {
+    padding: 0 10px;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+  .nav .kbd-hint {
+    display: none;
+  }
+  .nav .brand {
+    margin-right: 8px;
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+  .nav a.tab {
+    padding: 7px 9px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .field-grid,
+  .outcome-grid {
+    grid-template-columns: 1fr;
+  }
+  /* Pipeline: drop the two date columns too → Role · Company · Stage · Days */
+  table.pipeline th:nth-child(5),
+  table.pipeline td:nth-child(5),
+  table.pipeline th:nth-child(6),
+  table.pipeline td:nth-child(6) {
+    display: none;
+  }
+  table.pipeline th,
+  table.pipeline td {
+    padding: 9px 8px;
+  }
+  table.pipeline td.role-cell {
+    min-width: 0;
+  }
+  /* the "silent/closes" word is clipped in a narrow cell — number + colour
+     carry the signal on their own here */
+  .days .lbl {
+    display: none;
+  }
+  .stage-select {
+    max-width: none;
+  }
+  .detail-grid {
+    gap: 16px;
+  }
+  .composer-grid {
+    gap: 14px;
+  }
+  /* Touch targets: give small buttons a little more height on phones. */
+  .btn.small {
+    padding: 6px 10px;
+  }
+}
+
+/* Small phones: drop Company too → Role · Stage · Days, so Stage reads fully */
+@media (max-width: 480px) {
+  table.pipeline th:nth-child(2),
+  table.pipeline td:nth-child(2) {
+    display: none;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .tally {
+    gap: 12px;
+  }
+  .tally .stat .n {
+    font-size: 19px;
+  }
+  .page-head h1 {
+    font-size: 18px;
+  }
 }

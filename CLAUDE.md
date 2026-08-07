@@ -64,8 +64,13 @@ Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
 - **Empty states are real.** Every list says what to do next, never "No items
   found". Sample data is opt-in (Settings), never auto-loaded, so empty states
   stay visible.
-- **Desktop-first.** Built for ~1440px, degrades to ~1024px. No phone-specific
-  work. Multi-column layouts, dense tables, keyboard shortcuts.
+- **Desktop-first, but fits any screen.** Built for ~1440px; multi-column
+  layouts, dense tables, keyboard shortcuts. It now also collapses cleanly to a
+  phone: layouts stack to one column, the pipeline hides low-priority columns
+  (keeping role/stage/days), the three-pane composer and master-detail screens
+  stack, and the page never scrolls sideways. Responsive rules live at the
+  bottom of `src/styles/app.css`. Keep column layouts in CSS classes (e.g.
+  `.master-detail`), not inline styles, so the media-query collapse still wins.
 - **Accessibility:** visible focus is never removed; `prefers-reduced-motion` is
   respected; dialogs close on `Esc`.
 - Match the surrounding style: TypeScript strict, no non-null-assertion soup,
