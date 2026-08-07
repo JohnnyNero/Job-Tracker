@@ -338,10 +338,81 @@ export function recordEvidenceUse(
 }
 
 // ---------------------------------------------------------------------------
-// criteria (Phase 4 groundwork — kept minimal for now)
+// criteria (Phase 4)
 // ---------------------------------------------------------------------------
 
-export function setCriteria(data: Dataset, applicationId: string, rows: Criterion[]): Dataset {
-  const others = data.criteria.filter((c) => c.application_id !== applicationId)
-  return { ...data, criteria: [...others, ...rows] }
+function criteriaFor(data: Dataset, applicationId: string): Criterion[] {
+  return data.criteria
+    .filter((c) => c.application_id === applicationId)
+    .sort((a, b) => a.position - b.position)
+}
+
+export function addCriterion(
+  data: Dataset,
+  applicationId: string,
+  text: string,
+  essential = true,
+): [Dataset, Criterion] {
+  const siblings = criteriaFor(data, applicationId)
+  const position = siblings.length ? Math.max(...siblings.map((c) => c.position)) + 1 : 0
+  const row: Criterion = {
+    id: newId(),
+    application_id: applicationId,
+    text,
+    essential,
+    covered_by: null,
+    position,
+  }
+  return [{ ...data, criteria: [...data.criteria, row] }, row]
+}
+
+/** Append many criteria at once (from the ad splitter), after any existing. */
+export function addCriteriaBulk(
+  data: Dataset,
+  applicationId: string,
+  texts: string[],
+): Dataset {
+  const existing = criteriaFor(data, applicationId)
+  const existingText = new Set(existing.map((c) => c.text.toLowerCase()))
+  let position = existing.length ? Math.max(...existing.map((c) => c.position)) + 1 : 0
+  const rows: Criterion[] = []
+  for (const text of texts) {
+    if (existingText.has(text.toLowerCase())) continue
+    rows.push({
+      id: newId(),
+      application_id: applicationId,
+      text,
+      essential: true,
+      covered_by: null,
+      position: position++,
+    })
+  }
+  return { ...data, criteria: [...data.criteria, ...rows] }
+}
+
+export function updateCriterion(
+  data: Dataset,
+  id: string,
+  patch: Partial<Omit<Criterion, 'id' | 'application_id'>>,
+): Dataset {
+  const existing = data.criteria.find((c) => c.id === id)
+  if (!existing) return data
+  return { ...data, criteria: replace(data.criteria, { ...existing, ...patch }) }
+}
+
+export function deleteCriterion(data: Dataset, id: string): Dataset {
+  return { ...data, criteria: data.criteria.filter((c) => c.id !== id) }
+}
+
+/** Move a criterion up/down within its application by swapping positions. */
+export function moveCriterion(data: Dataset, id: string, dir: -1 | 1): Dataset {
+  const target = data.criteria.find((c) => c.id === id)
+  if (!target) return data
+  const siblings = criteriaFor(data, target.application_id)
+  const idx = siblings.findIndex((c) => c.id === id)
+  const swapWith = siblings[idx + dir]
+  if (!swapWith) return data
+  const a = { ...target, position: swapWith.position }
+  const b = { ...swapWith, position: target.position }
+  return { ...data, criteria: replace(replace(data.criteria, a), b) }
 }

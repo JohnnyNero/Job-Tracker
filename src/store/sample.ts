@@ -304,6 +304,39 @@ export function sampleDataset(): Dataset {
       { application_id: appSilentAmber, evidence_id: rotaEv },
       { application_id: appSilentAmber, evidence_id: conflictEv },
     ],
-    criteria: [],
+    criteria: [
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Build and manage staff rotas across a 7-day operation',
+        essential: true,
+        covered_by: rotaEv,
+        position: 0,
+      },
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Comfortable with cost control and labour percentage targets',
+        essential: true,
+        covered_by: costEv,
+        position: 1,
+      },
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Handle escalations and resolve customer and staff conflict',
+        essential: true,
+        covered_by: conflictEv,
+        position: 2,
+      },
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Experience with health & safety compliance',
+        essential: false,
+        covered_by: null,
+        position: 3,
+      },
+    ],
   }
 }

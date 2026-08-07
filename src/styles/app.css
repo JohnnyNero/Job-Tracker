@@ -515,6 +515,55 @@ table.pipeline td.company-cell {
   margin-left: 6px;
 }
 
+/* ------------------------------------------------------------------ criteria */
+.crit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.crit-row .chip.selectable {
+  min-width: 68px;
+  text-align: center;
+}
+@media (max-width: 720px) {
+  .crit-row {
+    flex-wrap: wrap;
+  }
+}
+.crit-ref {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crit-ref li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+.crit-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  align-self: center;
+  background: var(--danger);
+}
+.crit-dot.covered {
+  background: var(--pill-green-fg);
+}
+.crit-ref .crit-text {
+  flex: 1;
+}
+.crit-ref .crit-insert {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
 /* ------------------------------------------------------------------ composer */
 .composer-grid {
   display: grid;

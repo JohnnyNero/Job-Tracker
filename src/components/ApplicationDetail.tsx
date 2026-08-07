@@ -8,6 +8,7 @@ import { navigate, routes } from '../router'
 import { TextField, TextArea, DateField, UrlField, SelectField } from './fields'
 import { StagePill } from './common'
 import { CloseDialog } from './CloseDialog'
+import { CriteriaPanel } from './CriteriaPanel'
 
 export function ApplicationDetail({ id }: { id: string }) {
   const store = useStore()
@@ -173,6 +174,8 @@ export function ApplicationDetail({ id }: { id: string }) {
               />
             </div>
           </div>
+
+          <CriteriaPanel applicationId={app.id} adText={app.ad_text} />
 
           <div className="panel">
             <h2>Told them</h2>

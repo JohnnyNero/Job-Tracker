@@ -61,6 +61,16 @@ interface StoreValue {
   // composer
   recordEvidenceUse: (applicationId: string, evidenceIds: string[]) => void
 
+  // criteria
+  addCriterion: (applicationId: string, text: string, essential?: boolean) => void
+  addCriteriaBulk: (applicationId: string, texts: string[]) => void
+  updateCriterion: (
+    id: string,
+    patch: Partial<Omit<import('../types').Criterion, 'id' | 'application_id'>>,
+  ) => void
+  deleteCriterion: (id: string) => void
+  moveCriterion: (id: string, dir: -1 | 1) => void
+
   // whole-dataset ops (export / import / sample / reset)
   replaceAll: (data: Dataset) => void
 }
@@ -130,6 +140,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     recordEvidenceUse: (applicationId, evidenceIds) =>
       run((d) => m.recordEvidenceUse(d, applicationId, evidenceIds)),
+
+    addCriterion: (applicationId, text, essential = true) =>
+      runCreate((d) => m.addCriterion(d, applicationId, text, essential)),
+    addCriteriaBulk: (applicationId, texts) => run((d) => m.addCriteriaBulk(d, applicationId, texts)),
+    updateCriterion: (id, patch) => run((d) => m.updateCriterion(d, id, patch)),
+    deleteCriterion: (id) => run((d) => m.deleteCriterion(d, id)),
+    moveCriterion: (id, dir) => run((d) => m.moveCriterion(d, id, dir)),
 
     replaceAll: (incoming) => commit(normaliseDataset(incoming)),
   }

@@ -35,6 +35,18 @@ export function Composer({ id }: { id: string }) {
   const priorityCaps = profile?.priority_capabilities ?? []
   const hasPriority = priorityCaps.length > 0
 
+  const criteria = useMemo(
+    () =>
+      store.data.criteria
+        .filter((c) => c.application_id === id)
+        .sort((a, b) => a.position - b.position),
+    [store.data.criteria, id],
+  )
+  const evidenceById = useMemo(
+    () => new Map(store.data.evidence.map((e) => [e.id, e])),
+    [store.data.evidence],
+  )
+
   const evidence = useMemo(() => {
     const q = search.trim().toLowerCase()
     return store.data.evidence
@@ -137,15 +149,46 @@ export function Composer({ id }: { id: string }) {
         <div className="compose-pane">
           <div className="panel">
             <h2>Answering</h2>
+            {criteria.length > 0 && (
+              <ul className="crit-ref">
+                {criteria.map((c) => {
+                  const ev = c.covered_by ? evidenceById.get(c.covered_by) : undefined
+                  return (
+                    <li key={c.id}>
+                      <span className={`crit-dot ${c.covered_by ? 'covered' : ''}`} aria-hidden />
+                      <span className="crit-text">
+                        {c.text}
+                        {!c.essential && <span className="muted"> · nice</span>}
+                      </span>
+                      {ev && (
+                        <span className="crit-insert">
+                          {ev.full_text && (
+                            <button className="btn ghost small" onClick={() => insert(ev, 'full_text')} title={`Insert ${ev.title} (full)`}>
+                              +full
+                            </button>
+                          )}
+                          {ev.bullet && (
+                            <button className="btn ghost small" onClick={() => insert(ev, 'bullet')} title={`Insert ${ev.title} (bullet)`}>
+                              +bullet
+                            </button>
+                          )}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
             <textarea
-              rows={5}
+              rows={criteria.length > 0 ? 3 : 5}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Paste the question or the criterion you're answering, for reference while you write."
+              placeholder="A specific question you're answering, or a scratch note to keep in view."
             />
             <p className="section-note">
-              Phase 4 will pull these from the ad automatically. For now, keep the prompt in view
-              here.
+              {criteria.length > 0
+                ? 'Criteria come from this application (edit them on its detail screen). Insert the linked evidence straight from here.'
+                : 'Add criteria on the application detail screen and they’ll show here, each with its linked evidence to insert.'}
             </p>
           </div>
 

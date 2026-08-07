@@ -43,11 +43,16 @@ they reflect sample data and stay at zero for hand-entered items.
   `last_used_at` for each distinct item used
 - Launched from the application detail screen (`#/compose/:id`)
 
-## ⏳ Phase 4 — criteria checklist
+## ✅ Phase 4 — criteria checklist (built, offline)
 
-- Paste ad text, split on newlines/bullets into candidate criteria
-- Editable rows (add/delete/reorder), link each to an evidence item
-- The value is the editable checklist, not the parse quality
+- "Extract from ad" splits the pasted ad text on newlines/bullets into candidate
+  rows (`src/lib/criteria.ts`) — deliberately rough, as intended
+- Editable checklist on the application detail screen: per-row essential /
+  nice-to-have toggle, edit text, link to an evidence item, reorder, delete,
+  add rows by hand
+- Coverage badge (essential criteria with evidence linked)
+- The composer's left pane lists these criteria with a covered/uncovered dot and
+  quick-insert buttons for the linked evidence
 
 ## ⏳ Phase 5 — anything email
 
