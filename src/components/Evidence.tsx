@@ -18,6 +18,14 @@ export function Evidence() {
   const [capFilter, setCapFilter] = useState('')
   const [gapsOnly, setGapsOnly] = useState(false)
   const [newTitle, setNewTitle] = useState('')
+  // Mobile drill-in: 'list' shows the bank, 'detail' shows the editor. Ignored
+  // on desktop, where both are visible.
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
+
+  function openItem(id: string) {
+    setSelectedId(id)
+    setMobileView('detail')
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -45,7 +53,7 @@ export function Evidence() {
     setSearch('')
     setCapFilter('')
     setGapsOnly(false)
-    setSelectedId(item.id)
+    openItem(item.id)
   }
 
   return (
@@ -77,9 +85,9 @@ export function Evidence() {
           answer are the same item at two lengths, not four copies to maintain.
         </EmptyState>
       ) : (
-        <div className="detail-grid master-detail">
+        <div className="detail-grid master-detail" data-mobile-view={mobileView}>
           {/* LEFT: search, filter, list */}
-          <div>
+          <div className="md-list">
             <div className="panel">
               <div className="filters" style={{ marginBottom: 10 }}>
                 <div className="search-box" style={{ flex: 1 }}>
@@ -136,7 +144,7 @@ export function Evidence() {
                       key={e.id}
                       item={e}
                       active={e.id === selected?.id}
-                      onClick={() => setSelectedId(e.id)}
+                      onClick={() => openItem(e.id)}
                     />
                   ))}
                 </div>
@@ -144,14 +152,19 @@ export function Evidence() {
             </div>
           </div>
 
-          {/* RIGHT: editor */}
-          {selected ? (
-            <EvidenceEditor key={selected.id} item={selected} />
-          ) : (
-            <div className="panel">
-              <p className="muted">Select an evidence item on the left, or add a new one.</p>
-            </div>
-          )}
+          {/* RIGHT: editor (drill-in on mobile) */}
+          <div className="md-detail">
+            <button className="md-back btn ghost small" onClick={() => setMobileView('list')}>
+              ← All evidence
+            </button>
+            {selected ? (
+              <EvidenceEditor key={selected.id} item={selected} />
+            ) : (
+              <div className="panel">
+                <p className="muted">Select an evidence item on the left, or add a new one.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

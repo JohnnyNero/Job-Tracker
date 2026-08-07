@@ -680,6 +680,28 @@ table.pipeline td.company-cell {
     grid-template-columns: 1fr;
   }
 }
+/* Composer three-pane → tabs on narrow screens. */
+.composer-tabs {
+  display: none;
+  margin-bottom: 14px;
+}
+@media (max-width: 1080px) {
+  .composer-tabs {
+    display: flex;
+    width: 100%;
+  }
+  .composer-tabs button {
+    flex: 1;
+  }
+  .composer-grid[data-tab] .compose-pane {
+    display: none;
+  }
+  .composer-grid[data-tab='answering'] .pane-answering,
+  .composer-grid[data-tab='evidence'] .pane-evidence,
+  .composer-grid[data-tab='draft'] .pane-draft {
+    display: block;
+  }
+}
 .compose-pane .panel + .panel {
   margin-top: 16px;
 }
@@ -946,6 +968,24 @@ kbd {
 .sticky-pane {
   position: sticky;
   top: calc(var(--h-nav) + 16px);
+}
+
+/* Master-detail drill-in on mobile: show one column at a time with a Back
+   button, instead of stacking list + editor. */
+.md-back {
+  display: none;
+  margin-bottom: 12px;
+}
+@media (max-width: 1080px) {
+  .md-back {
+    display: inline-flex;
+  }
+  .master-detail[data-mobile-view='list'] .md-detail {
+    display: none;
+  }
+  .master-detail[data-mobile-view='detail'] .md-list {
+    display: none;
+  }
 }
 
 /* ==================================================================

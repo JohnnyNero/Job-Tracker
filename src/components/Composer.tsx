@@ -29,6 +29,8 @@ export function Composer({ id }: { id: string }) {
   const [priorityOnly, setPriorityOnly] = useState(true)
   const [question, setQuestion] = useState('')
   const [flash, setFlash] = useState<string | null>(null)
+  // On mobile the three panes become tabs; ignored on desktop (all shown).
+  const [tab, setTab] = useState<'answering' | 'evidence' | 'draft'>('evidence')
   const keySeq = useRef(1)
   const dragFrom = useRef<number | null>(null)
 
@@ -158,9 +160,21 @@ export function Composer({ id }: { id: string }) {
         {flash && <span className="saved-flash">{flash}</span>}
       </div>
 
-      <div className="composer-grid">
+      <div className="seg composer-tabs" role="tablist" aria-label="Composer panes">
+        <button className={tab === 'answering' ? 'on' : ''} onClick={() => setTab('answering')}>
+          Answering
+        </button>
+        <button className={tab === 'evidence' ? 'on' : ''} onClick={() => setTab('evidence')}>
+          Evidence{evidence.length ? ` (${evidence.length})` : ''}
+        </button>
+        <button className={tab === 'draft' ? 'on' : ''} onClick={() => setTab('draft')}>
+          Draft{blocks.length ? ` (${blocks.length})` : ''}
+        </button>
+      </div>
+
+      <div className="composer-grid" data-tab={tab}>
         {/* LEFT: what you're answering + positioning */}
-        <div className="compose-pane">
+        <div className="compose-pane pane-answering">
           <div className="panel">
             <h2>Answering</h2>
             {criteria.length > 0 && (
@@ -242,7 +256,7 @@ export function Composer({ id }: { id: string }) {
         </div>
 
         {/* MIDDLE: the evidence bank */}
-        <div className="compose-pane">
+        <div className="compose-pane pane-evidence">
           <div className="panel sticky-pane">
             <div className="row" style={{ marginBottom: 10 }}>
               <h2 style={{ margin: 0 }}>Evidence</h2>
@@ -320,7 +334,7 @@ export function Composer({ id }: { id: string }) {
         </div>
 
         {/* RIGHT: the draft */}
-        <div className="compose-pane">
+        <div className="compose-pane pane-draft">
           <div className="panel">
             <div className="row" style={{ marginBottom: 10 }}>
               <h2 style={{ margin: 0 }}>Draft</h2>

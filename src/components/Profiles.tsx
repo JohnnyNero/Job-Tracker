@@ -9,15 +9,21 @@ export function Profiles() {
   const profiles = store.data.role_profiles
   const [selectedId, setSelectedId] = useState<string | null>(profiles[0]?.id ?? null)
   const [newName, setNewName] = useState('')
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
 
   const selected = profiles.find((p) => p.id === selectedId) ?? profiles[0] ?? null
+
+  function openProfile(id: string) {
+    setSelectedId(id)
+    setMobileView('detail')
+  }
 
   function addProfile() {
     const name = newName.trim()
     if (!name) return
     const p = store.addProfile(name)
     setNewName('')
-    setSelectedId(p.id)
+    openProfile(p.id)
   }
 
   return (
@@ -51,8 +57,8 @@ export function Profiles() {
           apply for.
         </EmptyState>
       ) : (
-        <div className="detail-grid master-detail">
-          <div>
+        <div className="detail-grid master-detail" data-mobile-view={mobileView}>
+          <div className="md-list">
             <div className="panel">
               <h2>Profiles</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -65,7 +71,7 @@ export function Profiles() {
                       background: p.id === selected?.id ? 'var(--accent-soft)' : undefined,
                       fontWeight: p.id === selected?.id ? 600 : 500,
                     }}
-                    onClick={() => setSelectedId(p.id)}
+                    onClick={() => openProfile(p.id)}
                   >
                     {p.name}
                   </button>
@@ -89,7 +95,12 @@ export function Profiles() {
             <CapabilityManager />
           </div>
 
-          {selected && <ProfileEditor key={selected.id} profile={selected} />}
+          <div className="md-detail">
+            <button className="md-back btn ghost small" onClick={() => setMobileView('list')}>
+              ← All profiles
+            </button>
+            {selected && <ProfileEditor key={selected.id} profile={selected} />}
+          </div>
         </div>
       )}
     </div>
