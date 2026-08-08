@@ -206,6 +206,24 @@ input::placeholder,
 textarea::placeholder {
   color: var(--text-3);
 }
+/* Brief confirmation that a save-on-blur field committed. */
+.field-saved {
+  animation: field-saved 0.85s ease;
+}
+@keyframes field-saved {
+  0% {
+    border-color: var(--pill-green-fg);
+    box-shadow: 0 0 0 3px var(--pill-green-bg);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .field-saved {
+    animation: none;
+  }
+}
 label.field {
   display: block;
   margin-bottom: 12px;
@@ -371,6 +389,17 @@ label.field > .lbl {
   color: var(--text);
   font-weight: 600;
 }
+/* On phones the stage filter has too many buttons to fit — let it scroll
+   sideways inside its own box so every stage stays reachable. */
+@media (max-width: 820px) {
+  .filters .seg {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .filters .seg button {
+    white-space: nowrap;
+  }
+}
 .search-box {
   position: relative;
   min-width: 220px;
@@ -407,12 +436,28 @@ table.pipeline th {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-2);
-  cursor: pointer;
   user-select: none;
   z-index: 1;
+  padding: 0; /* the inner button carries the padding + click target */
 }
-table.pipeline th:hover {
+.th-sort {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.th-sort:hover {
   color: var(--text);
+}
+.th-sort:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
 }
 table.pipeline th .arrow {
   color: var(--accent);

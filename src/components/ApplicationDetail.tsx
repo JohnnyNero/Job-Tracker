@@ -253,13 +253,14 @@ function NoteBox({ applicationId }: { applicationId: string }) {
 
   return (
     <div className="row" style={{ gap: 8 }}>
-      <select value={kind} onChange={(e) => setKind(e.target.value as AppEvent['kind'])} style={{ width: 'auto' }}>
+      <select value={kind} onChange={(e) => setKind(e.target.value as AppEvent['kind'])} style={{ width: 'auto' }} aria-label="Timeline entry type">
         <option value="note">Note</option>
         <option value="contact">Contact</option>
       </select>
       <input
         type="text"
         className="grow"
+        aria-label="Timeline note"
         placeholder="Add a note to the timeline…"
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -316,6 +317,7 @@ function TellLog({ app }: { app: Application }) {
         <input
           type="text"
           className="grow"
+          aria-label="What you told them"
           placeholder="e.g. Quoted 1 month notice; said £34k current, seeking £38k+"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -407,7 +409,8 @@ function DraftItem({ id, body, when }: { id: string; body: string; when: string 
   )
 }
 
-/** The ad textarea, given its own tall scrolling box. Save on blur. */
+/** The ad textarea, given its own tall scrolling box. Saves on blur, and also
+ * commits right after a paste so "Extract from ad" reads the fresh text. */
 function AdTextArea({ value, onCommit }: { value: string; onCommit: (v: string) => void }) {
   const [draft, setDraft] = useState(value)
   useEffect(() => {
@@ -420,6 +423,13 @@ function AdTextArea({ value, onCommit }: { value: string; onCommit: (v: string) 
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={() => draft !== value && onCommit(draft)}
+      onPaste={(e) => {
+        // Commit once the pasted text has landed, so Extract sees it without a blur.
+        const el = e.currentTarget
+        setTimeout(() => {
+          if (el.value !== value) onCommit(el.value)
+        }, 0)
+      }}
       placeholder="Paste the full job ad here."
     />
   )

@@ -1,7 +1,43 @@
 import { useEffect } from 'react'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import type { Stage } from '../types'
 import { STAGE_LABELS, STAGE_TONE } from '../lib/constants'
+
+const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+
+/** Modal focus management: move focus into the dialog on open, keep Tab inside
+ * it, and restore focus to the triggering element on close. */
+export function useModalFocus(ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = ref.current
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const first = el?.querySelector<HTMLElement>(FOCUSABLE)
+    ;(first ?? el)?.focus()
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Tab' || !el) return
+      const nodes = Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (n) => n.offsetParent !== null,
+      )
+      if (nodes.length === 0) return
+      const firstN = nodes[0]
+      const lastN = nodes[nodes.length - 1]
+      if (e.shiftKey && document.activeElement === firstN) {
+        e.preventDefault()
+        lastN.focus()
+      } else if (!e.shiftKey && document.activeElement === lastN) {
+        e.preventDefault()
+        firstN.focus()
+      }
+    }
+    el?.addEventListener('keydown', onKey)
+    return () => {
+      el?.removeEventListener('keydown', onKey)
+      previouslyFocused?.focus?.()
+    }
+  }, [ref])
+}
 
 /** A coloured stage pill. */
 export function StagePill({ stage }: { stage: Stage }) {

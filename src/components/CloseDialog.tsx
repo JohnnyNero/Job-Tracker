@@ -1,7 +1,8 @@
+import { useRef } from 'react'
 import { useStore } from '../store/store'
 import type { Application, Outcome } from '../types'
 import { STAGE_LABELS } from '../lib/constants'
-import { useEscape } from './common'
+import { useEscape, useModalFocus } from './common'
 
 // Closing prompts for the outcome. "No response" is offered exactly as plainly
 // as the rest — it is a valid, and often the most common, ending.
@@ -14,7 +15,9 @@ const OPTIONS: { outcome: Outcome; title: string; detail: string }[] = [
 
 export function CloseDialog({ app, onClose }: { app: Application; onClose: () => void }) {
   const store = useStore()
+  const ref = useRef<HTMLDivElement>(null)
   useEscape(onClose)
+  useModalFocus(ref)
 
   function pick(outcome: Outcome) {
     store.closeApplication(app.id, outcome)
@@ -25,7 +28,7 @@ export function CloseDialog({ app, onClose }: { app: Application; onClose: () =>
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-label="Close application">
+      <div className="dialog" role="dialog" aria-modal="true" aria-label="Close application" ref={ref} tabIndex={-1}>
         <h2>Close this application</h2>
         <p className="muted">
           {app.role}

@@ -79,7 +79,7 @@ export function Settings() {
     <div className="page page-narrow">
       <div className="page-head">
         <h1>Settings</h1>
-        {msg && <span className="saved-flash">{msg}</span>}
+        <span className="saved-flash" aria-live="polite">{msg ?? ''}</span>
       </div>
 
       <div className="panel">

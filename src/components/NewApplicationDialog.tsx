@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store/store'
-import { useEscape } from './common'
+import { useEscape, useModalFocus } from './common'
 import { navigate, routes } from '../router'
 import { SOURCE_SUGGESTIONS } from '../lib/constants'
 import { parseAd } from '../lib/parseAd'
@@ -11,7 +11,9 @@ import { splitCriteria } from '../lib/criteria'
 // application costs one paste, not a form. Role is the only required field.
 export function NewApplicationDialog({ onClose }: { onClose: () => void }) {
   const store = useStore()
+  const ref = useRef<HTMLDivElement>(null)
   useEscape(onClose)
+  useModalFocus(ref)
 
   const [adText, setAdText] = useState('')
   const [role, setRole] = useState('')
@@ -73,7 +75,14 @@ export function NewApplicationDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="dialog dialog-wide" role="dialog" aria-modal="true" aria-label="New application">
+      <div
+        className="dialog dialog-wide"
+        role="dialog"
+        aria-modal="true"
+        aria-label="New application"
+        ref={ref}
+        tabIndex={-1}
+      >
         <h2>New application</h2>
         <p className="muted" style={{ marginBottom: 14 }}>
           Paste the ad &mdash; the fields fill in, it&rsquo;s archived, and its requirements become a

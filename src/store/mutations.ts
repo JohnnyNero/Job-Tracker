@@ -10,9 +10,9 @@ import type {
   RoleProfile,
   Stage,
 } from '../types'
-import { STAGE_LABELS, OUTCOME_LABELS } from '../lib/constants'
+import { STAGE_LABELS, OUTCOME_LABELS, AWAITING_STAGES } from '../lib/constants'
 import { newId, nowIso } from '../lib/id'
-import { addBusinessDaysIso } from '../lib/dates'
+import { addBusinessDaysIso, todayIsoDate } from '../lib/dates'
 
 // Pure mutations: (dataset, args) -> new dataset. No I/O. These encode the
 // business rules the Postgres triggers will enforce online, so behaviour is
@@ -108,12 +108,18 @@ export function changeStage(data: Dataset, id: string, stage: Stage): Dataset {
     stage === 'applied' && !existing.next_action_at
       ? addBusinessDaysIso(7)
       : existing.next_action_at
+  // Start the days-silent clock: advancing to a waiting stage with no applied
+  // date stamps today, so the signal (and stale/ghosted triage) work without a
+  // manual date entry — this is the most common path via the stage dropdown.
+  const appliedOn =
+    AWAITING_STAGES.includes(stage) && !existing.applied_on ? todayIsoDate() : existing.applied_on
   const updated: Application = {
     ...existing,
     stage,
     outcome: wasClosed ? null : existing.outcome,
     closed_from_stage: wasClosed ? null : existing.closed_from_stage,
     next_action_at: nextAction,
+    applied_on: appliedOn,
     updated_at: nowIso(),
   }
   const body = wasClosed
@@ -417,7 +423,9 @@ export function addCriteriaBulk(
   let position = existing.length ? Math.max(...existing.map((c) => c.position)) + 1 : 0
   const rows: Criterion[] = []
   for (const text of texts) {
-    if (existingText.has(text.toLowerCase())) continue
+    const key = text.toLowerCase()
+    if (existingText.has(key)) continue
+    existingText.add(key) // also dedupe within this batch
     rows.push({
       id: newId(),
       application_id: applicationId,

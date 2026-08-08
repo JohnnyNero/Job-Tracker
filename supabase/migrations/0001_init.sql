@@ -196,6 +196,12 @@ begin
     new.next_action_at := (now() + interval '9 days')::date;  -- ~7 business days
   end if;
 
+  -- Start the days-silent clock: advancing to a waiting stage with no applied
+  -- date stamps today (mirrors changeStage in src/store/mutations.ts).
+  if new.stage in ('applied','acknowledged') and new.applied_on is null then
+    new.applied_on := current_date;
+  end if;
+
   return new;
 end $$;
 

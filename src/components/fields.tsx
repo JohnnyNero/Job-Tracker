@@ -15,6 +15,19 @@ function useDraft(value: string) {
   return { draft, setDraft, focused }
 }
 
+/** A brief "just saved" pulse so save-on-blur commits are visible. */
+function useFlash(): [boolean, () => void] {
+  const [on, setOn] = useState(false)
+  const timer = useRef<number | undefined>(undefined)
+  const flash = () => {
+    setOn(false)
+    requestAnimationFrame(() => setOn(true))
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => setOn(false), 850)
+  }
+  return [on, flash]
+}
+
 interface BaseProps {
   label?: string
   value: string
@@ -25,13 +38,18 @@ interface BaseProps {
 
 export function TextField({ label, value, onCommit, placeholder, className }: BaseProps) {
   const { draft, setDraft, focused } = useDraft(value)
+  const [saved, flash] = useFlash()
   const commit = () => {
     focused.current = false
-    if (draft !== value) onCommit(draft)
+    if (draft !== value) {
+      onCommit(draft)
+      flash()
+    }
   }
   const input = (
     <input
       type="text"
+      className={saved ? 'field-saved' : undefined}
       value={draft}
       placeholder={placeholder}
       onFocus={() => (focused.current = true)}
@@ -47,15 +65,20 @@ export function TextField({ label, value, onCommit, placeholder, className }: Ba
 
 export function UrlField({ label, value, onCommit, placeholder, className }: BaseProps) {
   const { draft, setDraft, focused } = useDraft(value)
+  const [saved, flash] = useFlash()
   const commit = () => {
     focused.current = false
-    if (draft !== value) onCommit(draft)
+    if (draft !== value) {
+      onCommit(draft)
+      flash()
+    }
   }
   return wrap(
     label,
     className,
     <input
       type="url"
+      className={saved ? 'field-saved' : undefined}
       value={draft}
       placeholder={placeholder}
       onFocus={() => (focused.current = true)}
@@ -67,15 +90,20 @@ export function UrlField({ label, value, onCommit, placeholder, className }: Bas
 
 export function DateField({ label, value, onCommit, className }: Omit<BaseProps, 'placeholder'>) {
   const { draft, setDraft, focused } = useDraft(value)
+  const [saved, flash] = useFlash()
   const commit = () => {
     focused.current = false
-    if (draft !== value) onCommit(draft)
+    if (draft !== value) {
+      onCommit(draft)
+      flash()
+    }
   }
   return wrap(
     label,
     className,
     <input
       type="date"
+      className={saved ? 'field-saved' : undefined}
       value={draft}
       onFocus={() => (focused.current = true)}
       onChange={(e) => {
@@ -92,14 +120,19 @@ interface AreaProps extends BaseProps {
 
 export function TextArea({ label, value, onCommit, placeholder, rows = 4, className }: AreaProps) {
   const { draft, setDraft, focused } = useDraft(value)
+  const [saved, flash] = useFlash()
   const commit = () => {
     focused.current = false
-    if (draft !== value) onCommit(draft)
+    if (draft !== value) {
+      onCommit(draft)
+      flash()
+    }
   }
   return wrap(
     label,
     className,
     <textarea
+      className={saved ? 'field-saved' : undefined}
       value={draft}
       rows={rows}
       placeholder={placeholder}

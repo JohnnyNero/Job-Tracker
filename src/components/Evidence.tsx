@@ -65,6 +65,7 @@ export function Evidence() {
         <div className="inline-add">
           <input
             type="text"
+            aria-label="New evidence title"
             placeholder="Title, e.g. Rebuilt the prep rota"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
@@ -93,6 +94,7 @@ export function Evidence() {
                 <div className="search-box" style={{ flex: 1 }}>
                   <input
                     type="search"
+                    aria-label="Search evidence"
                     placeholder="Search title, bullet, answer…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -201,7 +203,7 @@ function EvidenceRow({
       <div className="row" style={{ gap: 8 }}>
         <span style={{ fontWeight: 600, flex: 1 }}>{item.title}</span>
         {isHalfFinished(item) && (
-          <span className="chip count-1" title="Only one length is filled in">
+          <span className="chip count-1" data-tip="Only one length is filled in — add the missing bullet or full answer.">
             half-finished
           </span>
         )}

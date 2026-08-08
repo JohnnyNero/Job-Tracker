@@ -133,9 +133,10 @@ export function Composer({ id }: { id: string }) {
     if (!text) return
     const ok = await copyToClipboard(text)
     // Record usage regardless of clipboard success — the intent to use is real.
+    // Only count blocks that actually contributed text to the copy.
     store.recordEvidenceUse(
       app!.id,
-      blocks.map((b) => b.evidenceId),
+      blocks.filter((b) => b.text.trim()).map((b) => b.evidenceId),
     )
     // Snapshot the composed draft against the application ("which version did I
     // send here?").
@@ -157,7 +158,7 @@ export function Composer({ id }: { id: string }) {
       <div className="page-head">
         <h1>Composer</h1>
         <span className="sub">Insert · arrange · copy. It concatenates; you do the framing.</span>
-        {flash && <span className="saved-flash">{flash}</span>}
+        <span className="saved-flash" aria-live="polite">{flash ?? ''}</span>
       </div>
 
       <div className="seg composer-tabs" role="tablist" aria-label="Composer panes">
@@ -271,7 +272,13 @@ export function Composer({ id }: { id: string }) {
               style={{ marginBottom: 8 }}
             />
             {hasPriority && (
-              <label className="row" style={{ gap: 6, cursor: 'pointer', marginBottom: 10 }}>
+              <label
+                className="row"
+                style={{ gap: 6, cursor: 'pointer', marginBottom: 10 }}
+                data-tip={`Show only evidence tagged with this profile's priority capabilities${
+                  priorityCaps.length ? ` (${priorityCaps.join(', ')})` : ''
+                }.`}
+              >
                 <input
                   type="checkbox"
                   checked={priorityOnly}

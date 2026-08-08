@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store/store'
 import type { Criterion } from '../types'
 import { splitCriteria } from '../lib/criteria'
@@ -78,6 +78,7 @@ export function CriteriaPanel({ applicationId, adText }: { applicationId: string
       <div className="inline-add">
         <input
           type="text"
+          aria-label="New criterion"
           placeholder="Add a criterion…"
           value={newText}
           onChange={(e) => setNewText(e.target.value)}
@@ -96,6 +97,10 @@ function CriterionRow({ c, first, last }: { c: Criterion; first: boolean; last: 
   const evidence = store.data.evidence
   const covered = !!c.covered_by
   const suggestions = covered ? [] : suggestEvidence(c.text, evidence)
+  // Controlled save-on-blur so the field reflects external changes (import /
+  // reset) instead of going stale like an uncontrolled defaultValue.
+  const [draft, setDraft] = useState(c.text)
+  useEffect(() => setDraft(c.text), [c.text])
 
   return (
     <div className="crit-item">
@@ -112,9 +117,11 @@ function CriterionRow({ c, first, last }: { c: Criterion; first: boolean; last: 
       <input
         type="text"
         className="grow"
-        defaultValue={c.text}
-        onBlur={(e) => {
-          const v = e.target.value.trim()
+        aria-label="Criterion text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          const v = draft.trim()
           if (v && v !== c.text) store.updateCriterion(c.id, { text: v })
         }}
       />

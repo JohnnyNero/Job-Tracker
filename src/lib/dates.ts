@@ -14,6 +14,14 @@ function parseDate(s: string | null): Date | null {
   return isNaN(d.getTime()) ? null : d
 }
 
+/** Midnight of the given day, so day-difference math is exact calendar days
+ * regardless of the current time (stored dates are date-only / midnight). */
+function startOfDay(d: Date): Date {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  return x
+}
+
 export type DaysTone = 'neutral' | 'amber' | 'red'
 
 export interface DaysSignal {
@@ -34,10 +42,11 @@ export interface DaysSignal {
  *  - otherwise             -> null (blank cell).
  */
 export function daysSignal(app: Application, today = new Date()): DaysSignal | null {
+  const t = startOfDay(today)
   if (AWAITING_STAGES.includes(app.stage)) {
     const applied = parseDate(app.applied_on)
     if (!applied) return null
-    const days = daysBetween(applied, today)
+    const days = daysBetween(applied, t)
     const tone: DaysTone = days >= 21 ? 'red' : days >= 10 ? 'amber' : 'neutral'
     return {
       value: days,
@@ -50,7 +59,7 @@ export function daysSignal(app: Application, today = new Date()): DaysSignal | n
   if (app.stage === 'drafting' && app.closes_on) {
     const closes = parseDate(app.closes_on)
     if (!closes) return null
-    const days = daysBetween(today, closes)
+    const days = daysBetween(t, closes)
     // Past the deadline reads as urgent too.
     const tone: DaysTone = days <= 3 ? 'amber' : 'neutral'
     return {
@@ -116,12 +125,12 @@ export function addBusinessDaysIso(n: number, from = new Date()): string {
 export function daysSince(s: string | null, today = new Date()): number | null {
   const d = parseDate(s)
   if (!d) return null
-  return daysBetween(d, today)
+  return daysBetween(d, startOfDay(today))
 }
 
 /** Whole days until a date (date - today), negative if past, or null. */
 export function daysUntil(s: string | null, today = new Date()): number | null {
   const d = parseDate(s)
   if (!d) return null
-  return daysBetween(today, d)
+  return daysBetween(startOfDay(today), d)
 }

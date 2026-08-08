@@ -40,6 +40,7 @@ export function Profiles() {
             <div className="inline-add" style={{ justifyContent: 'center' }}>
               <input
                 type="text"
+                aria-label="New profile name"
                 placeholder="e.g. General operations manager"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -81,6 +82,7 @@ export function Profiles() {
               <div className="inline-add">
                 <input
                   type="text"
+                  aria-label="New profile name"
                   placeholder="New profile name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
@@ -199,6 +201,7 @@ function ProfileEditor({ profile }: { profile: RoleProfile }) {
               <span
                 key={c.name}
                 className={`chip ${c.count === 0 ? 'count-0' : c.count === 1 ? 'count-1' : ''}`}
+                data-tip={`${c.count} evidence item${c.count === 1 ? '' : 's'} tagged “${c.name}”. Zero/one are gaps to write about.`}
               >
                 {c.name} · <strong>{c.count}</strong>
               </span>
@@ -241,6 +244,7 @@ function CapabilityManager() {
               <input
                 type="text"
                 defaultValue={c.name}
+                aria-label="Capability name"
                 onBlur={(e) => e.target.value.trim() && e.target.value !== c.name && store.updateCapability(c.id, { name: e.target.value.trim() })}
               />
               <button
@@ -260,6 +264,7 @@ function CapabilityManager() {
       <div className="inline-add">
         <input
           type="text"
+          aria-label="New capability"
           placeholder="Add a capability…"
           value={name}
           onChange={(e) => setName(e.target.value)}

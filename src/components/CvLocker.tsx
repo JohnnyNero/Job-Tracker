@@ -26,6 +26,7 @@ export function CvLocker() {
         <div className="inline-add">
           <input
             type="text"
+            aria-label="New CV label"
             placeholder="Label, e.g. ops-v3"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}

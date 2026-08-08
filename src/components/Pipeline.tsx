@@ -7,7 +7,7 @@ import { daysSignal, fmtDate } from '../lib/dates'
 import { buildTriage } from '../lib/triage'
 import type { TriagedApp } from '../lib/triage'
 import { navigate, routes } from '../router'
-import { EmptyState, isTypingTarget } from './common'
+import { EmptyState, isTypingTarget, useEscape, useModalFocus } from './common'
 import { NewApplicationDialog } from './NewApplicationDialog'
 import { CloseDialog } from './CloseDialog'
 
@@ -23,7 +23,7 @@ type SortKey =
   | 'source'
   | 'days'
 
-const COLUMNS: { key: SortKey; label: string }[] = [
+const COLUMNS: { key: SortKey; label: string; tip?: string }[] = [
   { key: 'role', label: 'Role' },
   { key: 'company', label: 'Company' },
   { key: 'profile', label: 'Role profile' },
@@ -32,7 +32,11 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'closes_on', label: 'Closes' },
   { key: 'cv', label: 'CV sent' },
   { key: 'source', label: 'Source' },
-  { key: 'days', label: 'Days' },
+  {
+    key: 'days',
+    label: 'Days',
+    tip: 'Applied/Acknowledged: days silent (amber 10–20, red 21+). Drafting: days until the ad closes.',
+  },
 ]
 
 /** Rough urgency for the days column sort: silent longer = higher, closing
@@ -284,6 +288,7 @@ export function Pipeline() {
               value={profileFilter}
               onChange={(e) => setProfileFilter(e.target.value)}
               style={{ width: 'auto' }}
+              aria-label="Filter by role profile"
             >
               <option value="">All profiles</option>
               {store.data.role_profiles.map((p) => (
@@ -317,9 +322,11 @@ export function Pipeline() {
               <thead>
                 <tr>
                   {COLUMNS.map((c) => (
-                    <th key={c.key} onClick={() => onHeaderClick(c.key)} aria-sort={sortKey === c.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
-                      {c.label}
-                      {sortKey === c.key && <span className="arrow">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+                    <th key={c.key} aria-sort={sortKey === c.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                      <button type="button" className="th-sort" onClick={() => onHeaderClick(c.key)} title={c.tip}>
+                        {c.label}
+                        {sortKey === c.key && <span className="arrow">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+                      </button>
                     </th>
                   ))}
                 </tr>
@@ -467,7 +474,7 @@ function PipelineRow({
       <td>{app.source || <span className="muted">—</span>}</td>
       <td>
         {sig ? (
-          <span className={`days ${sig.tone}`} title={sig.title}>
+          <span className={`days ${sig.tone}`} title={sig.title} aria-label={sig.title}>
             {sig.value}
             <span className="lbl">{sig.label}</span>
           </span>
@@ -480,6 +487,9 @@ function PipelineRow({
 }
 
 function ShortcutsHelp({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEscape(onClose)
+  useModalFocus(ref)
   const rows: [string, string][] = [
     ['/', 'Focus search'],
     ['n', 'New application'],
@@ -491,7 +501,7 @@ function ShortcutsHelp({ onClose }: { onClose: () => void }) {
   ]
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+      <div className="dialog" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" ref={ref} tabIndex={-1}>
         <h2>Keyboard shortcuts</h2>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
           <tbody>
