@@ -109,6 +109,19 @@ create table if not exists criteria (
   position int not null default 0
 );
 
+-- Interview questions to rehearse (interview prep mode). Each optionally links
+-- to an evidence story you'd tell, and records whether it actually came up.
+create table if not exists interview_questions (
+  id uuid primary key default gen_random_uuid(),
+  application_id uuid not null references applications on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  text text not null,
+  covered_by uuid references evidence on delete set null,
+  notes text,
+  asked boolean not null default false,
+  position int not null default 0
+);
+
 -- Timeline: stage changes and free-text notes
 create table if not exists events (
   id uuid primary key default gen_random_uuid(),
@@ -130,6 +143,7 @@ alter table cv_versions         enable row level security;
 alter table applications        enable row level security;
 alter table application_evidence enable row level security;
 alter table criteria            enable row level security;
+alter table interview_questions enable row level security;
 alter table events              enable row level security;
 
 -- Postgres has no "create policy if not exists"; drop then create so this file
@@ -160,6 +174,10 @@ create policy "own rows" on application_evidence
 
 drop policy if exists "own rows" on criteria;
 create policy "own rows" on criteria
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on interview_questions;
+create policy "own rows" on interview_questions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 drop policy if exists "own rows" on events;

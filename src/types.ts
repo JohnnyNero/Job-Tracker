@@ -131,6 +131,20 @@ export interface Criterion {
   position: number
 }
 
+/** A likely/actual interview question and the story you'd answer it with. */
+export interface InterviewQuestion {
+  id: string
+  application_id: string
+  text: string
+  /** Evidence id — the story you'd tell for this question. */
+  covered_by: string | null
+  /** Your angle / reminders for the answer. */
+  notes: string | null
+  /** Did it actually come up in the interview? (feedback loop) */
+  asked: boolean
+  position: number
+}
+
 /** The entire dataset — this is exactly what export/import writes and reads. */
 export interface Dataset {
   capabilities: Capability[]
@@ -141,4 +155,5 @@ export interface Dataset {
   events: AppEvent[]
   application_evidence: ApplicationEvidence[]
   criteria: Criterion[]
+  interview_questions: InterviewQuestion[]
 }

@@ -37,6 +37,9 @@ There are deliberately **no per-sector copies** of an evidence item.
   +7 business days on entering `applied`).
 - **application_evidence** — join: which evidence went into which application.
 - **criteria** — ad criteria checklist (Phase 4).
+- **interview_questions** — questions to rehearse per application (interview prep
+  mode). Each optionally links to an evidence story via `covered_by` and records
+  whether it `asked` (came up), `notes`, and `position`.
 - **events** — the timeline: automatic `stage` rows plus manual `note`/`contact`.
 
 ## Stage & outcome lifecycle

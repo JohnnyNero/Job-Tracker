@@ -8,6 +8,7 @@ export type Route =
   | { name: 'pipeline' }
   | { name: 'application'; id: string }
   | { name: 'compose'; id: string }
+  | { name: 'prep'; id: string }
   | { name: 'evidence' }
   | { name: 'profiles' }
   | { name: 'cv' }
@@ -26,6 +27,8 @@ function parse(hash: string): Route {
       return parts[1] ? { name: 'application', id: parts[1] } : { name: 'pipeline' }
     case 'compose':
       return parts[1] ? { name: 'compose', id: parts[1] } : { name: 'pipeline' }
+    case 'prep':
+      return parts[1] ? { name: 'prep', id: parts[1] } : { name: 'pipeline' }
     case 'evidence':
       return { name: 'evidence' }
     case 'profiles':
@@ -66,6 +69,7 @@ export const routes = {
   pipeline: () => '#/',
   application: (id: string) => `#/app/${id}`,
   compose: (id: string) => `#/compose/${id}`,
+  prep: (id: string) => `#/prep/${id}`,
   evidence: () => '#/evidence',
   profiles: () => '#/profiles',
   cv: () => '#/cv',

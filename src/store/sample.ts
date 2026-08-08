@@ -343,5 +343,43 @@ export function sampleDataset(): Dataset {
         position: 3,
       },
     ],
+    interview_questions: [
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Walk me through how you build a rota for a busy 7-day week.',
+        covered_by: rotaEv,
+        notes: 'Lead with the fairness angle — that’s what kept turnover down.',
+        asked: true,
+        position: 0,
+      },
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Tell me about a time you brought costs back under control.',
+        covered_by: costEv,
+        notes: null,
+        asked: false,
+        position: 1,
+      },
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Describe a conflict between staff members and how you handled it.',
+        covered_by: conflictEv,
+        notes: null,
+        asked: false,
+        position: 2,
+      },
+      {
+        id: newId(),
+        application_id: appInterview,
+        text: 'Why do you want to leave your current role?',
+        covered_by: null,
+        notes: 'Frame as moving toward growth, not away from problems.',
+        asked: false,
+        position: 3,
+      },
+    ],
   }
 }

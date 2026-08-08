@@ -92,6 +92,12 @@ export function ApplicationDetail({ id }: { id: string }) {
         <a className="btn" href={routes.compose(app.id)}>
           Compose…
         </a>
+        <a
+          className={`btn ${app.stage === 'interview' || app.stage === 'final_stage' ? 'primary' : ''}`}
+          href={routes.prep(app.id)}
+        >
+          Prep…
+        </a>
         {app.stage !== 'closed' ? (
           <button className="btn" onClick={() => setClosing(true)}>
             Close…

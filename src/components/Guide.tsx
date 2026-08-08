@@ -150,6 +150,30 @@ export function Guide() {
         </p>
       </Section>
 
+      <Section title="Interview prep">
+        <p>
+          Once a role reaches <b>Interview</b>, open <b>Prep…</b> from the application. It assembles
+          everything you need in the room from what you already captured — the role facts, how to{' '}
+          <b>position yourself</b> (from the profile), <b>what they&rsquo;re judging</b> (your
+          criteria and the story linked to each), and <b>what you told them</b>, so your answers stay
+          consistent with earlier calls.
+        </p>
+        <ul>
+          <li>
+            <b>Draft from criteria</b> turns each criterion into a behavioural question stub,
+            carrying over the evidence you already linked.
+          </li>
+          <li>
+            <b>Link a story</b> to each question and its full-length answer appears inline to
+            rehearse against — no hunting through the evidence bank.
+          </li>
+          <li>
+            <b>Came up?</b> — after the interview, mark which questions were actually asked. Over
+            time that tells you what these interviews really probe.
+          </li>
+        </ul>
+      </Section>
+
       <Section title="Keyboard shortcuts">
         <table className="guide-keys">
           <tbody>

@@ -2,6 +2,7 @@ import { useRoute, routes } from './router'
 import { Pipeline } from './components/Pipeline'
 import { ApplicationDetail } from './components/ApplicationDetail'
 import { Composer } from './components/Composer'
+import { InterviewPrep } from './components/InterviewPrep'
 import { Evidence } from './components/Evidence'
 import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
@@ -18,6 +19,7 @@ export function App() {
         {route.name === 'pipeline' && <Pipeline />}
         {route.name === 'application' && <ApplicationDetail id={route.id} />}
         {route.name === 'compose' && <Composer id={route.id} />}
+        {route.name === 'prep' && <InterviewPrep id={route.id} />}
         {route.name === 'evidence' && <Evidence />}
         {route.name === 'profiles' && <Profiles />}
         {route.name === 'cv' && <CvLocker />}

@@ -17,6 +17,7 @@ export function emptyDataset(): Dataset {
     events: [],
     application_evidence: [],
     criteria: [],
+    interview_questions: [],
   }
 }
 
@@ -36,6 +37,7 @@ export function normaliseDataset(raw: unknown): Dataset {
     events: arr(r.events),
     application_evidence: arr(r.application_evidence),
     criteria: arr(r.criteria),
+    interview_questions: arr(r.interview_questions),
   }
 }
 

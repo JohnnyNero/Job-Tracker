@@ -868,6 +868,90 @@ table.pipeline td.company-cell {
   color: var(--tone-amber-fg);
 }
 
+/* ------------------------------------------------------------------ interview prep */
+/* Two panes: reference on the left (assembled from the ad), rehearsal on the
+   right. Collapses to tabs on narrow screens, mirroring the composer. */
+.prep-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .prep-grid {
+    grid-template-columns: 1fr;
+  }
+  .prep-grid[data-tab] .compose-pane {
+    display: none;
+  }
+  .prep-grid[data-tab='reference'] .pane-reference,
+  .prep-grid[data-tab='questions'] .pane-questions {
+    display: block;
+  }
+}
+/* Role facts as a compact two-column definition list. */
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.facts dt {
+  color: var(--text-3);
+  font-weight: 600;
+}
+.facts dd {
+  margin: 0;
+  color: var(--text);
+}
+/* A question + its rehearsal card. */
+.prep-q {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: var(--surface-2);
+}
+.prep-q.asked {
+  border-color: var(--pill-green-fg);
+}
+.prep-q-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.prep-q-text {
+  flex: 1;
+  resize: none;
+  overflow: hidden;
+  min-height: 34px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.chip.selectable.on {
+  border-color: var(--pill-green-fg);
+  color: var(--pill-green-fg);
+}
+/* The linked evidence answer, shown verbatim to rehearse against. */
+.prep-answer {
+  border-left: 3px solid var(--accent);
+  padding: 8px 12px;
+  margin: 6px 0;
+  background: var(--surface);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+.prep-q-notes {
+  width: 100%;
+  resize: vertical;
+  min-height: 44px;
+  margin-top: 4px;
+}
+
 /* ------------------------------------------------------------------ dialog */
 .overlay {
   position: fixed;

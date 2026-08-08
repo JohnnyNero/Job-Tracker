@@ -6,6 +6,7 @@ import type {
   CvVersion,
   Dataset,
   Evidence,
+  InterviewQuestion,
   Outcome,
   RoleProfile,
   Stage,
@@ -193,6 +194,7 @@ export function deleteApplication(data: Dataset, id: string): Dataset {
     events: data.events.filter((e) => e.application_id !== id),
     application_evidence: data.application_evidence.filter((ae) => ae.application_id !== id),
     criteria: data.criteria.filter((c) => c.application_id !== id),
+    interview_questions: data.interview_questions.filter((q) => q.application_id !== id),
   }
 }
 
@@ -310,6 +312,9 @@ export function deleteEvidence(data: Dataset, id: string): Dataset {
     evidence: data.evidence.filter((e) => e.id !== id),
     application_evidence: data.application_evidence.filter((ae) => ae.evidence_id !== id),
     criteria: data.criteria.map((c) => (c.covered_by === id ? { ...c, covered_by: null } : c)),
+    interview_questions: data.interview_questions.map((q) =>
+      q.covered_by === id ? { ...q, covered_by: null } : q,
+    ),
   }
 }
 
@@ -463,4 +468,87 @@ export function moveCriterion(data: Dataset, id: string, dir: -1 | 1): Dataset {
   const a = { ...target, position: swapWith.position }
   const b = { ...swapWith, position: target.position }
   return { ...data, criteria: replace(replace(data.criteria, a), b) }
+}
+
+// ---------------------------------------------------------------------------
+// interview questions (Interview Prep)
+// ---------------------------------------------------------------------------
+
+function questionsFor(data: Dataset, applicationId: string): InterviewQuestion[] {
+  return data.interview_questions
+    .filter((q) => q.application_id === applicationId)
+    .sort((a, b) => a.position - b.position)
+}
+
+export function addInterviewQuestion(
+  data: Dataset,
+  applicationId: string,
+  text: string,
+  coveredBy: string | null = null,
+): [Dataset, InterviewQuestion] {
+  const siblings = questionsFor(data, applicationId)
+  const position = siblings.length ? Math.max(...siblings.map((q) => q.position)) + 1 : 0
+  const q: InterviewQuestion = {
+    id: newId(),
+    application_id: applicationId,
+    text,
+    covered_by: coveredBy,
+    notes: null,
+    asked: false,
+    position,
+  }
+  return [{ ...data, interview_questions: [...data.interview_questions, q] }, q]
+}
+
+/** Seed prep questions from the application's criteria (each becomes a
+ * behavioural-question stub, carrying over the criterion's linked evidence). */
+export function addQuestionsFromCriteria(data: Dataset, applicationId: string): Dataset {
+  const criteria = data.criteria
+    .filter((c) => c.application_id === applicationId)
+    .sort((a, b) => a.position - b.position)
+  const existing = questionsFor(data, applicationId)
+  const existingText = new Set(existing.map((q) => q.text.toLowerCase()))
+  let position = existing.length ? Math.max(...existing.map((q) => q.position)) + 1 : 0
+  const rows: InterviewQuestion[] = []
+  for (const c of criteria) {
+    const text = `Tell me about a time you demonstrated: “${c.text}”`
+    if (existingText.has(text.toLowerCase())) continue
+    existingText.add(text.toLowerCase())
+    rows.push({
+      id: newId(),
+      application_id: applicationId,
+      text,
+      covered_by: c.covered_by,
+      notes: null,
+      asked: false,
+      position: position++,
+    })
+  }
+  return { ...data, interview_questions: [...data.interview_questions, ...rows] }
+}
+
+export function updateInterviewQuestion(
+  data: Dataset,
+  id: string,
+  patch: Partial<Omit<InterviewQuestion, 'id' | 'application_id'>>,
+): Dataset {
+  const existing = data.interview_questions.find((q) => q.id === id)
+  if (!existing) return data
+  return { ...data, interview_questions: replace(data.interview_questions, { ...existing, ...patch }) }
+}
+
+export function deleteInterviewQuestion(data: Dataset, id: string): Dataset {
+  return { ...data, interview_questions: data.interview_questions.filter((q) => q.id !== id) }
+}
+
+export function moveInterviewQuestion(data: Dataset, id: string, dir: -1 | 1): Dataset {
+  const target = data.interview_questions.find((q) => q.id === id)
+  if (!target) return data
+  const siblings = questionsFor(data, target.application_id)
+  const idx = siblings.findIndex((q) => q.id === id)
+  const swapWith = siblings[idx + dir]
+  if (!swapWith) return data
+  const a = { ...target, position: swapWith.position }
+  const b = { ...swapWith, position: target.position }
+  return { ...data, interview_questions: replace(replace(data.interview_questions, a), b) }
 }

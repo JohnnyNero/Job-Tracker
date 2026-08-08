@@ -73,6 +73,16 @@ interface StoreValue {
   deleteCriterion: (id: string) => void
   moveCriterion: (id: string, dir: -1 | 1) => void
 
+  // interview prep
+  addInterviewQuestion: (applicationId: string, text: string, coveredBy?: string | null) => void
+  addQuestionsFromCriteria: (applicationId: string) => void
+  updateInterviewQuestion: (
+    id: string,
+    patch: Partial<Omit<import('../types').InterviewQuestion, 'id' | 'application_id'>>,
+  ) => void
+  deleteInterviewQuestion: (id: string) => void
+  moveInterviewQuestion: (id: string, dir: -1 | 1) => void
+
   // whole-dataset ops (export / import / sample / reset)
   replaceAll: (data: Dataset) => void
 }
@@ -151,6 +161,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateCriterion: (id, patch) => run((d) => m.updateCriterion(d, id, patch)),
     deleteCriterion: (id) => run((d) => m.deleteCriterion(d, id)),
     moveCriterion: (id, dir) => run((d) => m.moveCriterion(d, id, dir)),
+
+    addInterviewQuestion: (applicationId, text, coveredBy = null) =>
+      runCreate((d) => m.addInterviewQuestion(d, applicationId, text, coveredBy)),
+    addQuestionsFromCriteria: (applicationId) =>
+      run((d) => m.addQuestionsFromCriteria(d, applicationId)),
+    updateInterviewQuestion: (id, patch) => run((d) => m.updateInterviewQuestion(d, id, patch)),
+    deleteInterviewQuestion: (id) => run((d) => m.deleteInterviewQuestion(d, id)),
+    moveInterviewQuestion: (id, dir) => run((d) => m.moveInterviewQuestion(d, id, dir)),
 
     replaceAll: (incoming) => commit(normaliseDataset(incoming)),
   }
