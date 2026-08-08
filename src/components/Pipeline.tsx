@@ -227,21 +227,21 @@ export function Pipeline() {
       </div>
 
       <div className="tally">
-        <div className="stat">
+        <div className="stat" data-tip="Applications that need action today: follow-ups due, gone silent, or a draft closing soon.">
           <span className="n" style={triage.length ? { color: 'var(--tone-red-fg)' } : undefined}>
             {triage.length}
           </span>
           <span className="l">need you</span>
         </div>
-        <div className="stat">
+        <div className="stat" data-tip="Applications still in play — every stage except Closed.">
           <span className="n">{liveCount}</span>
           <span className="l">live</span>
         </div>
-        <div className="stat">
+        <div className="stat" data-tip="Applied or Acknowledged and waiting on them to reply.">
           <span className="n">{awaitingCount}</span>
           <span className="l">awaiting reply</span>
         </div>
-        <div className="stat">
+        <div className="stat" data-tip="Reusable stories in your evidence bank.">
           <span className="n">{evidenceCount}</span>
           <span className="l">evidence in bank</span>
         </div>
@@ -260,7 +260,8 @@ export function Pipeline() {
         >
           Track a job the moment you spot it &mdash; paste the ad text before the link dies.
           Press <kbd>n</kbd> any time to add one. To try the app with example data first,
-          open <a href={routes.settings()}>Settings</a> and load the sample.
+          open <a href={routes.settings()}>Settings</a> and load the sample. New here? Read the{' '}
+          <a href={routes.guide()}>Guide</a>.
         </EmptyState>
       ) : (
         <>

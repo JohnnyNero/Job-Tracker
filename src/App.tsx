@@ -6,6 +6,7 @@ import { Evidence } from './components/Evidence'
 import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
 import { Settings } from './components/Settings'
+import { Guide } from './components/Guide'
 
 export function App() {
   const route = useRoute()
@@ -21,6 +22,7 @@ export function App() {
         {route.name === 'profiles' && <Profiles />}
         {route.name === 'cv' && <CvLocker />}
         {route.name === 'settings' && <Settings />}
+        {route.name === 'guide' && <Guide />}
         {route.name === 'not_found' && <NotFound path={route.path} />}
       </main>
     </div>
@@ -45,7 +47,7 @@ function Nav({ routeName }: { routeName: string }) {
       {tab(routes.cv(), 'CV locker', routeName === 'cv')}
       {tab(routes.settings(), 'Settings', routeName === 'settings')}
       <span className="spacer" />
-      <span className="kbd-hint">Press ? on the pipeline for shortcuts</span>
+      {tab(routes.guide(), 'Guide', routeName === 'guide')}
     </nav>
   )
 }

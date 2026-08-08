@@ -50,8 +50,8 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   `job-tracker:v1`, in the same shape as the Settings JSON export.
 - `src/lib/` — `constants` (stages, tones, labels), `dates` (the days-silent
   signal), `id`.
-- `src/router.ts` — tiny hash router (`#/`, `#/app/:id`, `#/profiles`, `#/cv`,
-  `#/settings`).
+- `src/router.ts` — tiny hash router (`#/`, `#/app/:id`, `#/compose/:id`,
+  `#/evidence`, `#/profiles`, `#/cv`, `#/settings`, `#/guide`).
 
 Full detail: `docs/architecture.md`. Data model: `docs/data-model.md`.
 Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.

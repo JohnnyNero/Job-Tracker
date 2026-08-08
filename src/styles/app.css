@@ -945,6 +945,86 @@ table.pipeline td.company-cell {
   margin: 18px 0;
 }
 
+/* ------------------------------------------------------------------ guide */
+.guide-section + .guide-section {
+  margin-top: 16px;
+}
+.guide .banner {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.guide-section p {
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+.guide-section ul,
+.guide-section ol {
+  margin: 0 0 6px;
+  padding-left: 20px;
+}
+.guide-section li {
+  color: var(--text-2);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.guide-section b {
+  color: var(--text);
+}
+.guide-loop {
+  padding-left: 20px;
+}
+.guide-keys {
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.guide-keys td {
+  padding: 6px 16px 6px 0;
+  color: var(--text-2);
+  vertical-align: top;
+}
+.guide-keys td:first-child {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ tooltips */
+/* Lightweight hover/focus tooltip. Left-anchored so it never clips the left
+   page edge. Only use on elements in normal flow — not inside scroll boxes. */
+[data-tip] {
+  position: relative;
+}
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: normal;
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tip]::after {
+    transition: none;
+  }
+}
+
 kbd {
   display: inline-block;
   padding: 1px 7px;

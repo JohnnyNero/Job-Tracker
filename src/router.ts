@@ -12,6 +12,7 @@ export type Route =
   | { name: 'profiles' }
   | { name: 'cv' }
   | { name: 'settings' }
+  | { name: 'guide' }
   | { name: 'not_found'; path: string }
 
 function parse(hash: string): Route {
@@ -33,6 +34,8 @@ function parse(hash: string): Route {
       return { name: 'cv' }
     case 'settings':
       return { name: 'settings' }
+    case 'guide':
+      return { name: 'guide' }
     default:
       return { name: 'not_found', path }
   }
@@ -67,4 +70,5 @@ export const routes = {
   profiles: () => '#/profiles',
   cv: () => '#/cv',
   settings: () => '#/settings',
+  guide: () => '#/guide',
 }
