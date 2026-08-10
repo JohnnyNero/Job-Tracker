@@ -60,6 +60,47 @@ export function StagePill({ stage }: { stage: Stage }) {
   return <span className={`pill ${STAGE_TONE[stage]}`}>{STAGE_LABELS[stage]}</span>
 }
 
+/** A small circular progress ring with a centred label. */
+export function Ring({
+  value,
+  max,
+  size = 46,
+  label,
+  done,
+}: {
+  value: number
+  max: number
+  size?: number
+  label?: string
+  done?: boolean
+}) {
+  const stroke = 4
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const pct = max > 0 ? Math.min(1, value / max) : 0
+  const complete = done ?? value >= max
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="ring" aria-hidden>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={complete ? 'var(--pill-green-fg)' : 'var(--accent)'}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - pct)}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+      <text x="50%" y="50%" className="ring-label" dominantBaseline="central" textAnchor="middle">
+        {label ?? `${value}/${max}`}
+      </text>
+    </svg>
+  )
+}
+
 /** A real empty state: says what to do next, never "No items found". */
 export function EmptyState({
   title,

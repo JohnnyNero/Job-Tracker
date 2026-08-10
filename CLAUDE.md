@@ -58,6 +58,15 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   storage go through `todayIsoDate`/`addDaysIso` in `src/lib/dates.ts`, which
   build a **local** `YYYY-MM-DD` — never `toISOString()`, which shifts the day
   for non-UTC users.
+- **Guidance layer (getting-going + staying on track).** `src/lib/coach.ts`
+  derives the weekly-applied ring, pipeline-health, and the "Move things forward"
+  suggestions (interviews to prep, uncovered essential criteria, thin pipeline)
+  from the existing `Dataset` — no new entities. `GettingStarted.tsx` is the
+  data-driven onboarding checklist; `CvImportDialog.tsx` + `src/lib/parseCv.ts`
+  seed the evidence bank from a pasted CV. Onboarding/target state lives in
+  **`prefs`** (`useStore().prefs` / `setPrefs`), persisted under
+  `job-tracker:v1:prefs` — deliberately OUTSIDE the `Dataset` and its SQL mirror,
+  since it's per-device UI config, not domain data.
 - `src/lib/` — `constants` (stages, tones, labels), `dates` (the days-silent
   signal), `id`.
 - `src/router.ts` — tiny hash router (`#/`, `#/app/:id`, `#/compose/:id`,

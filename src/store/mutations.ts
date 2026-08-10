@@ -330,6 +330,30 @@ export function addEvidence(data: Dataset, title: string): [Dataset, Evidence] {
   return [{ ...data, evidence: [...data.evidence, ev] }, ev]
 }
 
+/** Add several evidence items at once (e.g. seeded from a pasted CV). Each keeps
+ * only a bullet — the full interview answer is filled in later, so they arrive
+ * flagged half-finished, which is the correct nudge. */
+export function addEvidenceBulk(
+  data: Dataset,
+  items: { title: string; bullet?: string | null }[],
+): [Dataset, Evidence[]] {
+  const now = nowIso()
+  const created: Evidence[] = items
+    .filter((i) => i.title.trim())
+    .map((i) => ({
+      id: newId(),
+      title: i.title.trim(),
+      bullet: i.bullet?.trim() || null,
+      full_text: null,
+      capabilities: [],
+      when_happened: null,
+      use_count: 0,
+      last_used_at: null,
+      created_at: now,
+    }))
+  return [{ ...data, evidence: [...data.evidence, ...created] }, created]
+}
+
 export function updateEvidence(
   data: Dataset,
   id: string,

@@ -7,9 +7,12 @@ import { daysSignal, fmtDate } from '../lib/dates'
 import { buildTriage } from '../lib/triage'
 import type { TriagedApp } from '../lib/triage'
 import { navigate, routes } from '../router'
-import { EmptyState, isTypingTarget, useEscape, useMediaQuery, useModalFocus } from './common'
+import { EmptyState, isTypingTarget, Ring, useEscape, useMediaQuery, useModalFocus } from './common'
 import { NewApplicationDialog } from './NewApplicationDialog'
 import { CloseDialog } from './CloseDialog'
+import { GettingStarted } from './GettingStarted'
+import { buildGuidance, weekProgress } from '../lib/coach'
+import type { GuidanceItem } from '../lib/coach'
 
 type Filter = 'live' | 'all' | Stage
 type SortKey =
@@ -217,8 +220,12 @@ export function Pipeline() {
   const awaitingCount = apps.filter((a) => AWAITING_STAGES.includes(a.stage)).length
   const evidenceCount = store.data.evidence.length
   const triage = useMemo(() => buildTriage(apps), [apps])
+  const guidance = useMemo(() => buildGuidance(store.data), [store.data])
+  const week = weekProgress(store.data, store.prefs.weeklyTarget)
 
   const isEmpty = apps.length === 0
+  // The checklist supersedes the classic empty state while onboarding.
+  const showChecklist = !store.prefs.checklistDismissed
 
   return (
     <div className="page">
@@ -231,43 +238,58 @@ export function Pipeline() {
         </button>
       </div>
 
-      <div className="tally">
-        <div className="stat" data-tip="Applications that need action today: follow-ups due, gone silent, or a draft closing soon.">
-          <span className="n" style={triage.length ? { color: 'var(--tone-red-fg)' } : undefined}>
-            {triage.length}
-          </span>
-          <span className="l">need you</span>
+      {showChecklist && <GettingStarted onNewApplication={() => setShowNew(true)} />}
+
+      {!isEmpty && (
+        <div className="tally">
+          <div className="stat stat-ring" data-tip="Applications you marked applied this week, against your weekly target (change it in Settings).">
+            <Ring value={week.applied} max={week.target} label={`${week.applied}/${week.target}`} />
+            <span className="l">applied this week</span>
+          </div>
+          <div className="stat" data-tip="Applications that need action today: follow-ups due, gone silent, or a draft closing soon.">
+            <span className="n" style={triage.length ? { color: 'var(--tone-red-fg)' } : undefined}>
+              {triage.length}
+            </span>
+            <span className="l">need you</span>
+          </div>
+          <div className="stat" data-tip="Applications still in play. Keeping ~8–12 in flight means no single rejection stings.">
+            <span className="n" style={week.thin ? { color: 'var(--tone-amber-fg)' } : undefined}>
+              {liveCount}
+            </span>
+            <span className="l">live{week.thin ? ' · thin' : ''}</span>
+          </div>
+          <div className="stat" data-tip="Applied or Acknowledged and waiting on them to reply.">
+            <span className="n">{awaitingCount}</span>
+            <span className="l">awaiting reply</span>
+          </div>
+          <div className="stat" data-tip="Reusable stories in your evidence bank.">
+            <span className="n">{evidenceCount}</span>
+            <span className="l">evidence in bank</span>
+          </div>
         </div>
-        <div className="stat" data-tip="Applications still in play — every stage except Closed.">
-          <span className="n">{liveCount}</span>
-          <span className="l">live</span>
-        </div>
-        <div className="stat" data-tip="Applied or Acknowledged and waiting on them to reply.">
-          <span className="n">{awaitingCount}</span>
-          <span className="l">awaiting reply</span>
-        </div>
-        <div className="stat" data-tip="Reusable stories in your evidence bank.">
-          <span className="n">{evidenceCount}</span>
-          <span className="l">evidence in bank</span>
-        </div>
-      </div>
+      )}
 
       {!isEmpty && <TriagePanel items={triage} />}
+      {!isEmpty && guidance.length > 0 && (
+        <GuidancePanel items={guidance} onNew={() => setShowNew(true)} />
+      )}
 
       {isEmpty ? (
-        <EmptyState
-          title="No applications yet"
-          action={
-            <button className="btn primary" onClick={() => setShowNew(true)}>
-              Add your first application
-            </button>
-          }
-        >
-          Track a job the moment you spot it &mdash; paste the ad text before the link dies.
-          Press <kbd>n</kbd> any time to add one. To try the app with example data first,
-          open <a href={routes.settings()}>Settings</a> and load the sample. New here? Read the{' '}
-          <a href={routes.guide()}>Guide</a>.
-        </EmptyState>
+        showChecklist ? null : (
+          <EmptyState
+            title="No applications yet"
+            action={
+              <button className="btn primary" onClick={() => setShowNew(true)}>
+                Add your first application
+              </button>
+            }
+          >
+            Track a job the moment you spot it &mdash; paste the ad text before the link dies.
+            Press <kbd>n</kbd> any time to add one. To try the app with example data first,
+            open <a href={routes.settings()}>Settings</a> and load the sample. New here? Read the{' '}
+            <a href={routes.guide()}>Guide</a>.
+          </EmptyState>
+        )
       ) : (
         <>
           <div className="filters">
@@ -469,6 +491,80 @@ function TriagePanel({ items }: { items: TriagedApp[] }) {
         ))}
       </ul>
     </div>
+  )
+}
+
+/** Proactive "raise your odds" suggestions, distinct from the chase-oriented
+ * triage queue: interviews to prep, applications with uncovered criteria, and a
+ * thin-pipeline nudge. */
+function GuidancePanel({ items, onNew }: { items: GuidanceItem[]; onNew: () => void }) {
+  return (
+    <div className="triage guidance">
+      <div className="triage-head">
+        <h2>Move things forward</h2>
+        <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+          — proactive steps that raise your odds, not just chase what&rsquo;s stale.
+        </span>
+      </div>
+      <ul>
+        {items.map((it, i) => (
+          <GuidanceRow key={i} it={it} onNew={onNew} />
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function GuidanceRow({ it, onNew }: { it: GuidanceItem; onNew: () => void }) {
+  const who = `${it.role ?? ''}${it.company ? ` · ${it.company}` : ''}`
+  if (it.kind === 'prep') {
+    return (
+      <li className="triage-row">
+        <span className="t-flag info">Interview</span>
+        <button className="t-open" onClick={() => navigate(routes.prep(it.appId!))}>
+          <b>Prep your stories</b> · {who}
+        </button>
+        <span className="t-actions">
+          <button className="btn small primary" onClick={() => navigate(routes.prep(it.appId!))}>
+            Prep…
+          </button>
+        </span>
+      </li>
+    )
+  }
+  if (it.kind === 'criteria') {
+    return (
+      <li className="triage-row">
+        <span className="t-flag info">Coverage</span>
+        <button className="t-open" onClick={() => navigate(routes.application(it.appId!))}>
+          <b>
+            {it.count} essential criteri{it.count === 1 ? 'on' : 'a'} with no story
+          </b>{' '}
+          · {who}
+        </button>
+        <span className="t-actions">
+          <button className="btn small" onClick={() => navigate(routes.application(it.appId!))}>
+            Open
+          </button>
+        </span>
+      </li>
+    )
+  }
+  return (
+    <li className="triage-row">
+      <span className="t-flag info">Pipeline</span>
+      <span className="t-open" style={{ cursor: 'default' }}>
+        <b>
+          Only {it.count} live application{it.count === 1 ? '' : 's'}
+        </b>{' '}
+        · keep a few more in flight so momentum holds.
+      </span>
+      <span className="t-actions">
+        <button className="btn small primary" onClick={onNew}>
+          + New
+        </button>
+      </span>
+    </li>
   )
 }
 

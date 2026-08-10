@@ -322,3 +322,42 @@ export function clearUndo(): void {
     /* ignore */
   }
 }
+
+// --- preferences (onboarding + targets) -------------------------------------
+// Local UI/config, deliberately OUTSIDE the Dataset (and its SQL mirror): it's
+// per-device, not domain data, so it never bloats an export or a future sync.
+const PREFS_KEY = STORAGE_KEY + ':prefs'
+
+export interface Prefs {
+  /** The getting-started checklist has been dismissed. */
+  checklistDismissed: boolean
+  /** Weekly tailored-application target for the progress ring. */
+  weeklyTarget: number
+}
+
+export function defaultPrefs(): Prefs {
+  return { checklistDismissed: false, weeklyTarget: 5 }
+}
+
+export function loadPrefs(): Prefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY)
+    if (!raw) return defaultPrefs()
+    const p = JSON.parse(raw) as Partial<Prefs>
+    return {
+      checklistDismissed: typeof p.checklistDismissed === 'boolean' ? p.checklistDismissed : false,
+      weeklyTarget:
+        typeof p.weeklyTarget === 'number' && p.weeklyTarget > 0 ? Math.round(p.weeklyTarget) : 5,
+    }
+  } catch {
+    return defaultPrefs()
+  }
+}
+
+export function savePrefs(p: Prefs): void {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(p))
+  } catch {
+    /* ignore */
+  }
+}

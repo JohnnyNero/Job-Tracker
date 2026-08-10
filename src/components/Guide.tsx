@@ -32,6 +32,33 @@ export function Guide() {
         </ol>
       </Section>
 
+      <Section title="Getting started & staying on track">
+        <p>
+          New here? The <b>Get started</b> checklist on the pipeline walks you through the whole
+          loop in five steps — add a job, break it into criteria, build your evidence bank, link a
+          story, mark it applied. It ticks itself off as you go and hides once you&rsquo;re set (or
+          hit <b>Hide</b>; bring it back from <a href={routes.settings()}>Settings</a>).
+        </p>
+        <ul>
+          <li>
+            <b>Paste your CV to seed the evidence bank.</b> On the Evidence screen, <b>Import from
+            CV</b> pulls the achievement lines out of your résumé so you start with a stocked bank,
+            not a blank one — pick the ones worth keeping and tidy the titles.
+          </li>
+          <li>
+            <b>A weekly target.</b> The ring on the pipeline tracks applications you marked applied
+            this week against your target (set it in Settings). Consistency is what keeps a search
+            alive — a steady weekly number beats bingeing then going quiet.
+          </li>
+          <li>
+            <b>Move things forward.</b> Below the &ldquo;Needs you&rdquo; queue, a short list of
+            proactive steps that raise your odds rather than just chase what&rsquo;s stale: an
+            interview to prep, an application whose essential criteria have no story yet, or a nudge
+            when your pipeline is thin (keeping ~8–12 live means no single rejection stings).
+          </li>
+        </ul>
+      </Section>
+
       <Section title="Pipeline & the “days” signal">
         <p>
           Your applications live in one sortable table — click any column header to sort. Change an

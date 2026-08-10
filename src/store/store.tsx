@@ -25,6 +25,9 @@ import {
   lastExportAt,
   getCorruptBackup,
   clearCorruptBackup,
+  loadPrefs,
+  savePrefs,
+  type Prefs,
 } from './localStore'
 import { daysSince, todayIsoDate } from '../lib/dates'
 import * as m from './mutations'
@@ -93,6 +96,7 @@ interface StoreValue {
 
   // evidence
   addEvidence: (title: string) => Evidence
+  addEvidenceBulk: (items: { title: string; bullet?: string | null }[]) => Evidence[]
   updateEvidence: (id: string, patch: Partial<Omit<Evidence, 'id' | 'created_at'>>) => void
   deleteEvidence: (id: string) => void
 
@@ -141,6 +145,10 @@ interface StoreValue {
   downloadCorruptBackup: () => void
   /** Hide the backup nudge for this session. */
   dismissBackupNudge: () => void
+
+  // preferences (onboarding + targets) — local, not part of the Dataset
+  prefs: Prefs
+  setPrefs: (patch: Partial<Prefs>) => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -161,6 +169,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [undoAvailable, setUndoAvailable] = useState(hasUndo)
   const [lastExport, setLastExport] = useState<string | null>(lastExportAt)
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
+  const [prefs, setPrefsState] = useState<Prefs>(loadPrefs)
 
   const commit = useCallback((next: Dataset) => {
     ref.current = next
@@ -223,6 +232,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteCapability: (id) => run((d) => m.deleteCapability(d, id)),
 
     addEvidence: (title) => runCreate((d) => m.addEvidence(d, title)),
+    addEvidenceBulk: (items) => runCreate((d) => m.addEvidenceBulk(d, items)),
     updateEvidence: (id, patch) => run((d) => m.updateEvidence(d, id, patch)),
     deleteEvidence: (id) => run((d) => m.deleteEvidence(d, id)),
 
@@ -291,6 +301,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (raw) downloadText(`job-tracker-unreadable-${todayIsoDate()}.json`, raw, 'application/json')
     },
     dismissBackupNudge: () => setNudgeDismissed(true),
+
+    prefs,
+    setPrefs: (patch) => {
+      const next = { ...prefs, ...patch }
+      setPrefsState(next)
+      savePrefs(next)
+    },
   }
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

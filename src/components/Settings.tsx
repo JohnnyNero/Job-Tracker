@@ -126,6 +126,31 @@ export function Settings() {
       </div>
 
       <div className="panel">
+        <h2>Guidance</h2>
+        <label className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
+          <span>Weekly application target</span>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            value={store.prefs.weeklyTarget}
+            onChange={(e) => store.setPrefs({ weeklyTarget: Math.max(1, Math.min(99, Number(e.target.value) || 1)) })}
+            style={{ width: 80 }}
+            aria-label="Weekly application target"
+          />
+        </label>
+        <p className="section-note" style={{ marginBottom: store.prefs.checklistDismissed ? 12 : 0 }}>
+          Drives the &ldquo;applied this week&rdquo; ring on the pipeline. Consistency beats bingeing
+          &mdash; a steady weekly number is what keeps a search alive.
+        </p>
+        {store.prefs.checklistDismissed && (
+          <button className="btn small" onClick={() => store.setPrefs({ checklistDismissed: false })}>
+            Show the getting-started checklist again
+          </button>
+        )}
+      </div>
+
+      <div className="panel">
         <h2>Going online with Supabase</h2>
         <p className="muted" style={{ marginBottom: 8 }}>
           The app runs fully offline today. When you&rsquo;re ready to sync across devices and back

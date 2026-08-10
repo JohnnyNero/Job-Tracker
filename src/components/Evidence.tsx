@@ -3,6 +3,7 @@ import { useStore } from '../store/store'
 import type { Evidence as EvidenceItem } from '../types'
 import { TextField, TextArea } from './fields'
 import { EmptyState } from './common'
+import { CvImportDialog } from './CvImportDialog'
 import { fmtDate } from '../lib/dates'
 import { routes } from '../router'
 
@@ -18,6 +19,7 @@ export function Evidence() {
   const [capFilter, setCapFilter] = useState('')
   const [gapsOnly, setGapsOnly] = useState(false)
   const [newTitle, setNewTitle] = useState('')
+  const [showImport, setShowImport] = useState(false)
   // Mobile drill-in: 'list' shows the bank, 'detail' shows the editor. Ignored
   // on desktop, where both are visible.
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
@@ -62,6 +64,9 @@ export function Evidence() {
         <h1>Evidence bank</h1>
         <span className="sub">Your stories, stored once. Tag by capability, reuse everywhere.</span>
         <span className="spacer" style={{ flex: 1 }} />
+        <button className="btn" onClick={() => setShowImport(true)}>
+          Import from CV…
+        </button>
         <div className="inline-add">
           <input
             type="text"
@@ -78,12 +83,22 @@ export function Evidence() {
         </div>
       </div>
 
+      {showImport && <CvImportDialog onClose={() => setShowImport(false)} />}
+
       {evidence.length === 0 ? (
-        <EmptyState title="No evidence yet">
+        <EmptyState
+          title="No evidence yet"
+          action={
+            <button className="btn primary" onClick={() => setShowImport(true)}>
+              Import from your CV
+            </button>
+          }
+        >
           Bank the stories you keep reaching for &mdash; a rota you rebuilt, a cost you cut, a
           conflict you defused. Store each once with a short <em>bullet</em> (CV length) and a full
           <em> answer</em> (interview length), tagged by capability. Then a CV line and an interview
-          answer are the same item at two lengths, not four copies to maintain.
+          answer are the same item at two lengths, not four copies to maintain.{' '}
+          <strong>Paste your CV</strong> to seed the bank in seconds, or add items by hand.
         </EmptyState>
       ) : (
         <div className="detail-grid master-detail" data-mobile-view={mobileView}>
