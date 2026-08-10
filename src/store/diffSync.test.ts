@@ -8,6 +8,11 @@ const withApp = (apps: Array<{ id: string; role: string }>): Dataset => ({
   applications: apps as unknown as Dataset['applications'],
 })
 
+const withEvents = (evs: Array<Record<string, unknown>>): Dataset => ({
+  ...emptyDataset(),
+  events: evs as unknown as Dataset['events'],
+})
+
 describe('computeDiff', () => {
   test('insert: id present in next, absent in prev', () => {
     const ops = computeDiff(emptyDataset(), withApp([{ id: 'a1', role: 'Dev' }]))
@@ -33,9 +38,26 @@ describe('computeDiff', () => {
     expect(computeDiff(same, same)).toEqual([])
   })
 
-  test('events table is never emitted', () => {
-    const prev = emptyDataset()
-    const next: Dataset = { ...emptyDataset(), events: [{ id: 'e1' } as unknown as Dataset['events'][number]] }
+  test('non-stage event insert is emitted', () => {
+    const ops = computeDiff(emptyDataset(), withEvents([{ id: 'ev1', kind: 'note', body: 'hi' }]))
+    expect(ops).toEqual([
+      { op: 'insert', table: 'events', row: { id: 'ev1', kind: 'note', body: 'hi' } },
+    ])
+  })
+
+  test("'stage' events are never emitted", () => {
+    const next = withEvents([{ id: 's1', kind: 'stage', body: 'applied → interview' }])
+    expect(computeDiff(emptyDataset(), next)).toEqual([])
+  })
+
+  test('non-stage event delete is emitted', () => {
+    const prev = withEvents([{ id: 'ev1', kind: 'note', body: 'hi' }])
+    expect(computeDiff(prev, emptyDataset())).toEqual([{ op: 'delete', table: 'events', id: 'ev1' }])
+  })
+
+  test('events are never updated (immutable)', () => {
+    const prev = withEvents([{ id: 'ev1', kind: 'note', body: 'a' }])
+    const next = withEvents([{ id: 'ev1', kind: 'note', body: 'b' }])
     expect(computeDiff(prev, next)).toEqual([])
   })
 })

@@ -1,13 +1,14 @@
 import type { Dataset } from '../types'
 
-export type TableName = Exclude<keyof Dataset, 'events'>
+export type TableName = keyof Dataset
 
 export type RowOp =
   | { op: 'insert'; table: TableName; row: Record<string, unknown> }
   | { op: 'update'; table: TableName; id: string; row: Record<string, unknown> }
   | { op: 'delete'; table: TableName; id: string }
 
-const TABLES: TableName[] = [
+// Tables synced with full insert/update/delete semantics.
+const FULL_TABLES: TableName[] = [
   'capabilities',
   'role_profiles',
   'evidence',
@@ -25,11 +26,18 @@ const byId = (rows: unknown[]): Map<string, Row> => {
   return m
 }
 
-/** Pure diff of two datasets into row operations. The `events` table is
- * deliberately excluded — Postgres triggers own it. */
+const isStage = (row: Row): boolean => row.kind === 'stage'
+
+/** Pure diff of two datasets into row operations.
+ *
+ * The `events` table is special: Postgres triggers own 'stage' events, so we
+ * NEVER push them (that would double-log). User-authored events
+ * (note/contact/told/draft) ARE synced, but only as insert/delete — events are
+ * immutable once created, so no updates are emitted for them. */
 export function computeDiff(prev: Dataset, next: Dataset): RowOp[] {
   const ops: RowOp[] = []
-  for (const table of TABLES) {
+
+  for (const table of FULL_TABLES) {
     const before = byId(prev[table] as unknown[])
     const after = byId(next[table] as unknown[])
     for (const [id, row] of after) {
@@ -42,5 +50,18 @@ export function computeDiff(prev: Dataset, next: Dataset): RowOp[] {
       if (!after.has(id)) ops.push({ op: 'delete', table, id })
     }
   }
+
+  // events: sync only non-'stage' kinds, insert/delete only (immutable).
+  const beforeEv = byId(prev.events as unknown[])
+  const afterEv = byId(next.events as unknown[])
+  for (const [id, row] of afterEv) {
+    if (isStage(row)) continue
+    if (!beforeEv.has(id)) ops.push({ op: 'insert', table: 'events', row })
+  }
+  for (const [id, row] of beforeEv) {
+    if (isStage(row)) continue
+    if (!afterEv.has(id)) ops.push({ op: 'delete', table: 'events', id })
+  }
+
   return ops
 }
