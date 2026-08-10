@@ -1174,6 +1174,53 @@ table.pipeline td.company-cell {
   font-size: 13px;
   margin-bottom: 16px;
 }
+
+/* Data-safety banners — sit at the top of the page content, above the routed
+   screen. Neutral by default; `danger` for the loud "you could lose data" ones. */
+.data-banners {
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 14px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.databanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text);
+}
+.databanner.danger {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+.databanner-text {
+  flex: 1;
+  min-width: 200px;
+}
+.databanner-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .data-banners {
+    padding: 12px 14px 0;
+  }
+  .databanner-actions {
+    width: 100%;
+  }
+  .databanner-actions .btn {
+    flex: 1;
+  }
+}
 .link-back {
   color: var(--text-2);
   font-weight: 500;

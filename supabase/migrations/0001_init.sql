@@ -228,8 +228,37 @@ create trigger applications_before_update
   before update on applications
   for each row execute function applications_before_update();
 
+-- Human labels for stages/outcomes, so the event text a trigger writes matches
+-- the offline store's exactly (STAGE_LABELS / OUTCOME_LABELS in src/lib/
+-- constants.ts). Keep these three in sync — same two-sources-of-truth rule as
+-- the rest of the bookkeeping.
+create or replace function stage_label(s text) returns text language sql immutable as $$
+  select case s
+    when 'drafting' then 'Drafting'
+    when 'applied' then 'Applied'
+    when 'acknowledged' then 'Acknowledged'
+    when 'shortlisted' then 'Shortlisted'
+    when 'interview' then 'Interview'
+    when 'final_stage' then 'Final stage'
+    when 'offer' then 'Offer'
+    when 'closed' then 'Closed'
+    else coalesce(s, 'unknown')
+  end
+$$;
+
+create or replace function outcome_label(o text) returns text language sql immutable as $$
+  select case o
+    when 'rejected' then 'Rejected'
+    when 'withdrew' then 'Withdrew'
+    when 'no_response' then 'No response'
+    when 'accepted' then 'Accepted'
+    else coalesce(o, '?')
+  end
+$$;
+
 -- 3) After a stage change: append a 'stage' event. Stage history is automatic;
--- it is never logged by hand.
+-- it is never logged by hand. Body text mirrors changeStage/closeApplication in
+-- src/store/mutations.ts so timelines read identically on either backend.
 create or replace function applications_log_stage()
 returns trigger language plpgsql as $$
 begin
@@ -241,11 +270,11 @@ begin
       'stage',
       case
         when new.stage = 'closed'
-          then 'Closed (' || coalesce(new.outcome, '?') || ') from '
-               || coalesce(new.closed_from_stage, old.stage)
+          then 'Closed (' || outcome_label(new.outcome) || ') from '
+               || stage_label(coalesce(new.closed_from_stage, old.stage))
         when old.stage = 'closed'
-          then 'Reopened → ' || new.stage
-        else old.stage || ' → ' || new.stage
+          then 'Reopened → ' || stage_label(new.stage)
+        else stage_label(old.stage) || ' → ' || stage_label(new.stage)
       end,
       now()
     );

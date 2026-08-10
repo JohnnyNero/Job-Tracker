@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useStore, emptyDataset } from '../store/store'
-import { serialiseDataset, normaliseDataset } from '../store/localStore'
+import { normaliseDataset } from '../store/localStore'
 import { sampleDataset } from '../store/sample'
 
 export function Settings() {
@@ -21,15 +21,7 @@ export function Settings() {
   }
 
   function exportJson() {
-    const blob = new Blob([serialiseDataset(store.data)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `job-tracker-backup-${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
+    store.exportNow()
     flash('Exported a JSON backup.')
   }
 

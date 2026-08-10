@@ -47,7 +47,17 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
 - `src/store/mutations.ts` holds the business rules (stage events, close
   bookkeeping, `updated_at`, cascades). Add rule changes here.
 - `src/store/localStore.ts` persists the entire `Dataset` as one JSON blob under
-  `job-tracker:v1`, in the same shape as the Settings JSON export.
+  `job-tracker:v1`, in the same shape as the Settings JSON export. It also owns
+  the **data-safety** layer: `loadDatasetSafe` preserves an unreadable blob under
+  `…:corrupt` instead of starting empty (so the first write can't overwrite it),
+  `saveDataset` returns `false` on quota/blocked writes (never a silent alert),
+  `normaliseDataset` backfills every row field and drops rows with no id / dangling
+  foreign keys, and a `…:undo` snapshot makes destructive replaces reversible.
+  The store surfaces all of this as `useStore().health`, rendered by
+  `DataBanners` (corrupt / unsaved / undo / backup-nudge). Dates written for
+  storage go through `todayIsoDate`/`addDaysIso` in `src/lib/dates.ts`, which
+  build a **local** `YYYY-MM-DD` — never `toISOString()`, which shifts the day
+  for non-UTC users.
 - `src/lib/` — `constants` (stages, tones, labels), `dates` (the days-silent
   signal), `id`.
 - `src/router.ts` — tiny hash router (`#/`, `#/app/:id`, `#/compose/:id`,
@@ -90,8 +100,12 @@ Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
 ## Gotchas — read before changing behaviour
 
 1. **Two sources of truth for business rules.** Stage events, `closed_from_stage`,
-   and `updated_at` are enforced offline in `mutations.ts` AND online by triggers
-   in `0001_init.sql`. If you change one, change the other, or they'll disagree.
+   `updated_at`, and the stage-event **body text** are enforced offline in
+   `mutations.ts` AND online by triggers in `0001_init.sql`. The trigger's event
+   text uses the `stage_label`/`outcome_label` SQL functions so it reads
+   identically to `STAGE_LABELS`/`OUTCOME_LABELS` — keep all three in sync. A
+   re-close that only changes the outcome logs no new event (both sides use
+   `is distinct from`). If you change one, change the other, or they'll disagree.
 2. **Online must NOT double-log stage events.** The DB trigger writes the stage
    event online, so the (future) Supabase store must skip the manual event insert
    that the offline store does. This is the single behavioural difference between

@@ -13,7 +13,7 @@ import type {
 } from '../types'
 import { STAGE_LABELS, OUTCOME_LABELS, AWAITING_STAGES } from '../lib/constants'
 import { newId, nowIso } from '../lib/id'
-import { addBusinessDaysIso, todayIsoDate } from '../lib/dates'
+import { addBusinessDaysIso, addDaysIso, todayIsoDate } from '../lib/dates'
 
 // Pure mutations: (dataset, args) -> new dataset. No I/O. These encode the
 // business rules the Postgres triggers will enforce online, so behaviour is
@@ -29,6 +29,25 @@ import { addBusinessDaysIso, todayIsoDate } from '../lib/dates'
 
 function replace<T extends { id: string }>(list: T[], item: T): T[] {
   return list.map((x) => (x.id === item.id ? item : x))
+}
+
+/** Move `id` one slot in `dir` within its already-sorted siblings, then compact
+ * every sibling's position to its array index. Compacting (rather than swapping
+ * two position values) self-heals colliding/duplicate positions from imported
+ * or partial data, which would otherwise make a row look "stuck". Returns the
+ * full sibling list with fresh positions, or null if the move is a no-op. */
+function reorderCompact<T extends { id: string; position: number }>(
+  siblings: T[],
+  id: string,
+  dir: -1 | 1,
+): T[] | null {
+  const idx = siblings.findIndex((s) => s.id === id)
+  if (idx < 0) return null
+  const j = idx + dir
+  if (j < 0 || j >= siblings.length) return null
+  const arr = siblings.slice()
+  ;[arr[idx], arr[j]] = [arr[j], arr[idx]]
+  return arr.map((s, i) => (s.position === i ? s : { ...s, position: i }))
 }
 
 function makeEvent(applicationId: string, kind: AppEvent['kind'], body: string): AppEvent {
@@ -86,7 +105,13 @@ export function updateApplication(
 ): Dataset {
   const existing = data.applications.find((a) => a.id === id)
   if (!existing) return data
-  const updated: Application = { ...existing, ...patch, updated_at: nowIso() }
+  const merged = { ...existing, ...patch }
+  // Mirror the SQL applications_before_update trigger: any write while the app
+  // is in a waiting stage with no applied_on stamps today, so offline and
+  // online agree on when the days-silent clock starts.
+  const applied_on =
+    AWAITING_STAGES.includes(merged.stage) && !merged.applied_on ? todayIsoDate() : merged.applied_on
+  const updated: Application = { ...merged, applied_on, updated_at: nowIso() }
   return { ...data, applications: replace(data.applications, updated) }
 }
 
@@ -138,7 +163,18 @@ export function changeStage(data: Dataset, id: string, stage: Stage): Dataset {
 export function closeApplication(data: Dataset, id: string, outcome: Outcome): Dataset {
   const existing = data.applications.find((a) => a.id === id)
   if (!existing) return data
-  const cameFrom = existing.stage === 'closed' ? existing.closed_from_stage : existing.stage
+
+  // Already closed → this is just an outcome correction. The SQL trigger only
+  // logs a stage event and touches closed_from_stage when the stage actually
+  // changes (`is distinct from`), so mirror that: update the outcome only, no
+  // new "Closed … from …" timeline entry.
+  if (existing.stage === 'closed') {
+    if (existing.outcome === outcome) return data
+    const updated: Application = { ...existing, outcome, updated_at: nowIso() }
+    return { ...data, applications: replace(data.applications, updated) }
+  }
+
+  const cameFrom = existing.stage
   const updated: Application = {
     ...existing,
     stage: 'closed',
@@ -146,7 +182,7 @@ export function closeApplication(data: Dataset, id: string, outcome: Outcome): D
     closed_from_stage: cameFrom,
     updated_at: nowIso(),
   }
-  const label = cameFrom ? STAGE_LABELS[cameFrom as Stage] ?? cameFrom : 'unknown'
+  const label = STAGE_LABELS[cameFrom] ?? cameFrom
   const body = `Closed (${OUTCOME_LABELS[outcome]}) from ${label}`
   return {
     ...data,
@@ -176,11 +212,9 @@ export function logFollowUp(data: Dataset, id: string): Dataset {
 export function snoozeApplication(data: Dataset, id: string, days: number): Dataset {
   const existing = data.applications.find((a) => a.id === id)
   if (!existing) return data
-  const from = new Date()
-  from.setDate(from.getDate() + days)
   const updated: Application = {
     ...existing,
-    next_action_at: from.toISOString().slice(0, 10),
+    next_action_at: addDaysIso(days),
     updated_at: nowIso(),
   }
   return { ...data, applications: replace(data.applications, updated) }
@@ -395,7 +429,7 @@ export function recordEvidenceUse(
 function criteriaFor(data: Dataset, applicationId: string): Criterion[] {
   return data.criteria
     .filter((c) => c.application_id === applicationId)
-    .sort((a, b) => a.position - b.position)
+    .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))
 }
 
 export function addCriterion(
@@ -457,17 +491,14 @@ export function deleteCriterion(data: Dataset, id: string): Dataset {
   return { ...data, criteria: data.criteria.filter((c) => c.id !== id) }
 }
 
-/** Move a criterion up/down within its application by swapping positions. */
+/** Move a criterion up/down within its application, compacting positions. */
 export function moveCriterion(data: Dataset, id: string, dir: -1 | 1): Dataset {
   const target = data.criteria.find((c) => c.id === id)
   if (!target) return data
-  const siblings = criteriaFor(data, target.application_id)
-  const idx = siblings.findIndex((c) => c.id === id)
-  const swapWith = siblings[idx + dir]
-  if (!swapWith) return data
-  const a = { ...target, position: swapWith.position }
-  const b = { ...swapWith, position: target.position }
-  return { ...data, criteria: replace(replace(data.criteria, a), b) }
+  const reordered = reorderCompact(criteriaFor(data, target.application_id), id, dir)
+  if (!reordered) return data
+  const byId = new Map(reordered.map((c) => [c.id, c]))
+  return { ...data, criteria: data.criteria.map((c) => byId.get(c.id) ?? c) }
 }
 
 // ---------------------------------------------------------------------------
@@ -477,7 +508,7 @@ export function moveCriterion(data: Dataset, id: string, dir: -1 | 1): Dataset {
 function questionsFor(data: Dataset, applicationId: string): InterviewQuestion[] {
   return data.interview_questions
     .filter((q) => q.application_id === applicationId)
-    .sort((a, b) => a.position - b.position)
+    .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))
 }
 
 export function addInterviewQuestion(
@@ -544,11 +575,8 @@ export function deleteInterviewQuestion(data: Dataset, id: string): Dataset {
 export function moveInterviewQuestion(data: Dataset, id: string, dir: -1 | 1): Dataset {
   const target = data.interview_questions.find((q) => q.id === id)
   if (!target) return data
-  const siblings = questionsFor(data, target.application_id)
-  const idx = siblings.findIndex((q) => q.id === id)
-  const swapWith = siblings[idx + dir]
-  if (!swapWith) return data
-  const a = { ...target, position: swapWith.position }
-  const b = { ...swapWith, position: target.position }
-  return { ...data, interview_questions: replace(replace(data.interview_questions, a), b) }
+  const reordered = reorderCompact(questionsFor(data, target.application_id), id, dir)
+  if (!reordered) return data
+  const byId = new Map(reordered.map((q) => [q.id, q]))
+  return { ...data, interview_questions: data.interview_questions.map((q) => byId.get(q.id) ?? q) }
 }

@@ -17,6 +17,7 @@ import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
 import { Settings } from './components/Settings'
 import { Guide } from './components/Guide'
+import { DataBanners } from './components/DataBanners'
 
 export function App() {
   const route = useRoute()
@@ -25,6 +26,7 @@ export function App() {
     <div className="app">
       <Nav routeName={route.name} />
       <main className="page-wrap">
+        <DataBanners />
         {route.name === 'pipeline' && <Pipeline />}
         {route.name === 'application' && <ApplicationDetail id={route.id} />}
         {route.name === 'compose' && <Composer id={route.id} />}

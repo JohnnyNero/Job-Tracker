@@ -1,10 +1,22 @@
 import type { Application } from '../types'
 import { AWAITING_STAGES } from './constants'
 
-/** Whole days between two dates (b - a), floored. */
+/** Whole calendar days between two local-midnight dates (b - a). Uses round,
+ * not floor, so a DST transition (a 23h or 25h "day") still counts as one day
+ * instead of zero or two. */
 function daysBetween(a: Date, b: Date): number {
   const ms = b.getTime() - a.getTime()
-  return Math.floor(ms / (1000 * 60 * 60 * 24))
+  return Math.round(ms / (1000 * 60 * 60 * 24))
+}
+
+/** A Date as a LOCAL YYYY-MM-DD. Must not go via toISOString(), which converts
+ * to UTC and shifts the calendar day for anyone not on UTC — the stored date
+ * would then be read back (as local midnight) a day off. */
+function toLocalIsoDate(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 /** Parse a YYYY-MM-DD (or ISO) string to a Date at local midnight, or null. */
@@ -96,19 +108,19 @@ export function fmtDateTime(s: string): string {
   })
 }
 
-/** Today as YYYY-MM-DD, for date input defaults. */
+/** Today as a LOCAL YYYY-MM-DD, for date input defaults and stored dates. */
 export function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10)
+  return toLocalIsoDate(new Date())
 }
 
-/** A date N calendar days from `from`, as YYYY-MM-DD. */
+/** A date N calendar days from `from`, as a LOCAL YYYY-MM-DD. */
 export function addDaysIso(days: number, from = new Date()): string {
   const d = new Date(from)
   d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
+  return toLocalIsoDate(d)
 }
 
-/** A date N business days (skipping Sat/Sun) from `from`, as YYYY-MM-DD.
+/** A date N business days (skipping Sat/Sun) from `from`, as a LOCAL YYYY-MM-DD.
  * Used for the follow-up nudge default. */
 export function addBusinessDaysIso(n: number, from = new Date()): string {
   const d = new Date(from)
@@ -118,7 +130,7 @@ export function addBusinessDaysIso(n: number, from = new Date()): string {
     const day = d.getDay()
     if (day !== 0 && day !== 6) added++
   }
-  return d.toISOString().slice(0, 10)
+  return toLocalIsoDate(d)
 }
 
 /** Whole days elapsed since a date (today - date), or null. */
