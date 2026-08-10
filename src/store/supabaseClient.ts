@@ -5,8 +5,13 @@ import type { RowOp } from './diffSync'
 const url = import.meta.env.VITE_SUPABASE_URL
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-/** Non-null only when both public env vars are set at build time. */
-export const supabase: SupabaseClient | null = url && anon ? createClient(url, anon) : null
+const looksReal =
+  !!url &&
+  !!anon &&
+  !url.includes('YOUR-PROJECT-ref') &&
+  anon !== 'your-public-anon-key'
+
+export const supabase: SupabaseClient | null = looksReal ? createClient(url!, anon!) : null
 export const isOnline = supabase !== null
 
 const ALL_TABLES: (keyof Dataset)[] = [
