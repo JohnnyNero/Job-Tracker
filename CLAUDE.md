@@ -9,12 +9,15 @@ not multi-tenant. One user. Optimised for *still being used in six weeks* — th
 failure mode is the board going stale because updating it is a chore, so every
 frequent action is fast and keyboard-driven.
 
-**Currently offline-first:** the app runs entirely on `localStorage`. A Supabase
-(Postgres) backend is fully specced and ready to wire but intentionally not
-connected yet. Don't add Supabase calls to screens — go through the store.
+**Two backends, one seam.** The app runs on `localStorage` offline, or on
+**Supabase (Postgres + magic-link auth)** online. The backend is chosen at
+runtime: if `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` are set at build time,
+the app renders `SupabaseStore` behind a `LoginGate`; otherwise the offline
+`StoreProvider`. Both expose the identical `useStore()` shape, so screens never
+change. **Don't add Supabase calls to screens — go through the store.**
 
-Stack: **React 18 + Vite + TypeScript**, minimal dependencies (React + react-dom
-only at runtime). Hash router, hand-written CSS with light/dark tokens.
+Stack: **React 18 + Vite + TypeScript**, `@supabase/supabase-js` for online mode,
+**Vitest** for unit tests. Hash router, hand-written CSS with light/dark tokens.
 
 ## Commands
 
@@ -24,24 +27,39 @@ npm run dev         # dev server (Vite)
 npm run build       # tsc -b type-check, then vite build → dist/
 npm run preview     # serve the production build
 npm run typecheck   # types only
+npm test            # Vitest (pure units: diffSync, backend, inviteCode, router)
 ```
 
-There is no test runner yet. Verify UI changes by building and, when it matters,
-driving the preview build with a headless browser (Chromium is preinstalled at
-`/opt/pw-browsers`; use `playwright-core` with an explicit `executablePath`).
+Tests cover the pure logic (dataset diff, backend selection, invite-code gen,
+router parsing). For UI changes, build and, when it matters, drive the preview
+build with a headless browser (Chromium is preinstalled at `/opt/pw-browsers`;
+use `playwright-core` with an explicit `executablePath`).
 
 ## Architecture in one screen
 
 ```
-components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
-                                   │  holds the whole Dataset in state
-                                   │  mirrors every write to localStorage
-                                   └→ mutations.ts (pure (Dataset)→Dataset)
+                          ┌ offline: StoreProvider (store.tsx) → localStore.ts
+components/* → useStore() ┤
+                          └ online:  SupabaseStore (SupabaseStore.tsx)
+                                       │ optimistic in-memory Dataset
+                                       │ computeDiff (diffSync.ts) → row writes
+                                       └ reconciles events/applications after push
+both paths share mutations.ts (pure (Dataset)→Dataset). Backend picked by
+backend.ts / main.tsx from isOnline (supabaseClient.ts).
 ```
 
 - **All reads/writes go through `useStore()`.** Screens never touch
   localStorage or any network client directly. This one seam is what makes the
-  offline→online switch safe. Preserve it.
+  offline/online switch safe. Preserve it.
+- **Online store:** `SupabaseStore.tsx` reuses `mutations.ts` for instant
+  optimistic state, then `diffSync.ts#computeDiff` turns each prev→next change
+  into row inserts/updates/deletes. `supabaseClient.ts` holds the client, auth,
+  reads, and `applyOp`. `LoginGate.tsx` is the magic-link gate.
+- **Accountability groups** (online only): `supabase/migrations/0002_*.sql` adds
+  `profiles`/`groups`/`group_members` + `SECURITY DEFINER` functions
+  (`group_summary`, `create_group`, `join_group`, `is_group_member`);
+  `src/store/groupsClient.ts` wraps them; `src/components/Group.tsx` is the page.
+  Raw-row RLS is untouched — only aggregate counts + display names cross users.
 - `src/types.ts` mirrors `supabase/migrations/0001_init.sql` field-for-field.
   **Change one, change the other.**
 - `src/store/mutations.ts` holds the business rules (stage events, close
@@ -51,7 +69,8 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
 - `src/lib/` — `constants` (stages, tones, labels), `dates` (the days-silent
   signal), `id`.
 - `src/router.ts` — tiny hash router (`#/`, `#/app/:id`, `#/compose/:id`,
-  `#/evidence`, `#/profiles`, `#/cv`, `#/settings`, `#/guide`).
+  `#/evidence`, `#/profiles`, `#/cv`, `#/settings`, `#/guide`, `#/group`). The
+  `#/group` tab is shown only online.
 
 Full detail: `docs/architecture.md`. Data model: `docs/data-model.md`.
 Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
@@ -82,21 +101,25 @@ Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
 1. **Two sources of truth for business rules.** Stage events, `closed_from_stage`,
    and `updated_at` are enforced offline in `mutations.ts` AND online by triggers
    in `0001_init.sql`. If you change one, change the other, or they'll disagree.
-2. **Online must NOT double-log stage events.** The DB trigger writes the stage
-   event online, so the (future) Supabase store must skip the manual event insert
-   that the offline store does. This is the single behavioural difference between
-   backends. It's documented in `docs/supabase-store-template.ts`.
-3. **RLS is load-bearing.** The anon key is public; every table has an
-   `own rows` policy. Never weaken it. Verify with `supabase/verify_rls.sql`
-   before shipping any online code.
-4. **Never commit secrets.** Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+2. **Online must NOT double-log stage events.** The DB trigger writes `stage`
+   events online, so `computeDiff` never pushes them. It DOES sync user-authored
+   events (note/contact/told/draft) as insert/delete only. `SupabaseStore`
+   refetches `events`+`applications` after each push to pick up trigger output.
+3. **`application_evidence` has a composite PK** (`application_id, evidence_id`),
+   no `id` column — `computeDiff` keys it on the pair and deletes via a `match`
+   object, not `id`. Don't route it through the id-keyed path.
+4. **RLS is load-bearing.** The anon key is public; every table has an
+   `own rows` policy, and groups share only aggregates via `SECURITY DEFINER`
+   functions. Never weaken it. Verify with `supabase/verify_rls.sql` and the
+   group checks in `docs/setup-supabase.md` before shipping online code.
+5. **Never commit secrets.** Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
    ever ship (both public). The `service_role` key goes nowhere near this repo.
-5. **Base path is case-sensitive.** GitHub Pages serves this repo at
+6. **Base path is case-sensitive.** GitHub Pages serves this repo at
    `/Job-Tracker/` — the path segment matches the repo name's case exactly. Vite
    `base` and `public/404.html` must both use `/Job-Tracker/`, or the page loads
    but its assets 404 and you get a blank screen. Keep them in sync if the repo
    is renamed (override via `VITE_BASE`).
-6. **`overflow-x: auto` makes a scroll container on both axes.** The pipeline's
+7. **`overflow-x: auto` makes a scroll container on both axes.** The pipeline's
    sticky header sticks to the top of `.table-wrap` (which is a scroll box) — see
    the comment in `src/styles/app.css`. Don't reintroduce a page-relative sticky
    offset there.

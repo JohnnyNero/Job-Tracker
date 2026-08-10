@@ -16,10 +16,9 @@ effort.
   plus the capability vocabulary and coverage view
 - Settings: JSON export/import, sample data, reset
 
-> Backend note: Phase 1 runs on localStorage. Connecting Supabase (auth, RLS,
-> Postgres, Storage) is a separate, optional step — see
-> [setup-supabase.md](setup-supabase.md). The schema, RLS, and triggers are
-> already written in `supabase/migrations/`.
+> Backend note: the tracker runs on localStorage offline. **Online mode
+> (Supabase) is now built and deployed** — see the Online mode section below and
+> [setup-supabase.md](setup-supabase.md).
 
 ## ✅ Phase 2 — evidence bank & profiles (built, offline)
 
@@ -54,6 +53,23 @@ they reflect sample data and stay at zero for hand-entered items.
 - The composer's left pane lists these criteria with a covered/uncovered dot and
   quick-insert buttons for the linked evidence
 
+## ✅ Online mode — Supabase (built, deployed)
+
+- Runtime backend switch: online when the two public env vars are set, else
+  localStorage. Same `useStore()` shape, so no screen changes.
+- Magic-link auth (`LoginGate`); per-account RLS; diff-based optimistic sync
+  (`diffSync.ts`) reusing the offline mutations; `stage` events owned by DB
+  triggers, user-authored events synced.
+- Design/plan: `docs/superpowers/specs|plans/2026-08-10-supabase-online-mode*`.
+
+## ✅ Accountability groups (built, deployed, online only)
+
+- Create/join a group by invite code; each member's card shows applied-this-week,
+  active, overdue follow-ups, interviews, offers.
+- Aggregate-only sharing: raw rows never cross users; only counts + display names,
+  via `SECURITY DEFINER` functions (`0002_accountability_groups.sql`).
+- Design/plan: `docs/superpowers/specs|plans/2026-08-10-accountability-groups*`.
+
 ## ⏳ Phase 5 — anything email
 
 Not to be started until Phases 1–4 have been in use for a month.
@@ -61,4 +77,6 @@ Not to be started until Phases 1–4 have been in use for a month.
 ## Explicitly not building
 
 Kanban, ATS/keyword scores, job-board scraping, CV file generation, per-sector
-evidence variants, industry tags, sharing/multi-user, charts and dashboards.
+evidence variants, industry tags, charts and dashboards. (Note: limited
+aggregate-only *accountability* sharing shipped — see above — but full
+collaborative multi-tenant sharing of raw data remains out of scope.)

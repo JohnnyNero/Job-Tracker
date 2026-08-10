@@ -53,12 +53,15 @@ console.log({ rows: data?.length, error })
 Insert a test row while signed in (via the dashboard), then re-run the snippet
 signed-out. Still zero? RLS works.
 
-## 4. Auth (single user — you)
+## 4. Auth
 
-Under **Authentication → Providers**, keep **Email** on and use magic links.
-Optionally turn **off** new sign-ups after your first login so only you can get
-in. There is no multi-user concept in this app; RLS scopes everything to your
-`auth.uid()`.
+Under **Authentication → Sign In / Providers** (older UI: **Providers**), keep
+**Email** on and use magic links. Each account is a fully isolated workspace —
+RLS scopes every table to the signed-in `auth.uid()`. If you want it to be just
+you, turn **off** "Allow new users to sign up" after your first login. If you
+want to use accountability groups with someone, keep sign-ups **on** (see the
+groups section below). There is no *collaborative* multi-tenant model: separate
+accounts never see each other's raw data, only shared aggregate counts.
 
 ## 5. Storage for CV files
 
@@ -101,8 +104,12 @@ To enable the shared accountability feature:
 
 1. Run [`../supabase/migrations/0002_accountability_groups.sql`](../supabase/migrations/0002_accountability_groups.sql)
    in the SQL editor (after `0001_init.sql`).
-2. Enable new sign-ups: **Authentication → Providers → Email → allow new users
-   to sign up**, so a partner can create their own account.
+2. Enable new sign-ups so a partner can create their own account. In the
+   dashboard sidebar: **Authentication → Sign In / Providers** (older UI:
+   **Providers**), open the **Email** provider (or the top-level **User Signups**
+   section), and turn **"Allow new users to sign up"** on. If you can't find it,
+   search the dashboard for "sign up". Turn it back off once everyone has joined
+   if you want to keep the project private.
 3. Verify privacy after setup, signed in as two different users in one group:
    - `select * from group_summary('<group-id>')` returns a counts row per member.
    - A non-member calling `group_summary` for that group gets zero rows.
