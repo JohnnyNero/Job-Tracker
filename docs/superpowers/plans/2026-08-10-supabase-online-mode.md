@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Node/type env: `"type": "module"`, TypeScript strict build via `tsc -b`. Keep `npm run typecheck` clean.
-- The online store MUST NOT write to the `events` table — DB triggers own stage events, `closed_from_stage`, and `updated_at` (verbatim from spec).
+- The online store MUST NOT push `stage` events — the DB trigger owns those (and `closed_from_stage`, `updated_at`). It MUST sync user-authored events (`note`/`contact`/`told`/`draft`) as insert/delete only (events are immutable). See Task 2.
 - The anon key is public; never add the `service_role` key to any file. RLS is the only protection.
 - `Dataset` keys map 1:1 to table names: `capabilities`, `role_profiles`, `evidence`, `cv_versions`, `applications`, `events`, `application_evidence`, `criteria`.
 - Offline mode (env unset) must remain byte-for-byte unchanged in behavior.

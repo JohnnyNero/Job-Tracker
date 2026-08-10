@@ -23,9 +23,11 @@ This design executes the plan already sketched in
   provider mirrors it to localStorage.
 - The database triggers (from
   [`supabase/migrations/0001_init.sql`](../../../supabase/migrations/0001_init.sql))
-  own `updated_at`, automatic **stage events**, and `closed_from_stage`. The
-  online store must therefore **not** write to the `events` table itself, or it
-  would double-log. This is the one behavioural difference from offline.
+  own `updated_at`, automatic **`stage` events**, and `closed_from_stage`. The
+  online store must therefore **not** write `stage` events itself, or it would
+  double-log. It MUST still sync user-authored events
+  (`note`/`contact`/`told`/`draft`) — those are created by `addEvent`, not by
+  any trigger. This split is the one behavioural difference from offline.
 - The anon key is public; **Row Level Security is the only protection**. RLS
   must be verified from a signed-out client before the app reads real data.
 
@@ -54,14 +56,16 @@ Adapted from `docs/supabase-store-template.ts`:
 - Storage (available, not yet wired into UI): `uploadCv`, `cvDownloadUrl`.
 
 ### 2. `src/store/diffSync.ts`
-One generic function `syncDiff(prev: Dataset, next: Dataset)`:
-- For each table **except `events`**: compare by `id`.
-  - ids in `next` not in `prev` → `insertRow`.
-  - ids in both whose row content changed → `updateRow` (send the row; DB
+One generic function `computeDiff(prev: Dataset, next: Dataset)`:
+- For each **full-sync** table (all except `events`): compare by `id`.
+  - ids in `next` not in `prev` → `insert`.
+  - ids in both whose row content changed → `update` (send the row; DB
     triggers overwrite `updated_at`/`closed_from_stage` authoritatively).
-  - ids in `prev` not in `next` → `deleteRow`.
-- Returns which tables were touched so the caller knows whether to reconcile.
-- `events` is never pushed — the DB owns it.
+  - ids in `prev` not in `next` → `delete`.
+- For the `events` table: sync **only non-`stage`** events, and **insert/delete
+  only** (events are immutable once created, so no updates). `stage` events are
+  never pushed — the DB trigger owns them, and the reconcile refetch brings them
+  back authoritatively.
 
 ### 3. `src/store/SupabaseStore.tsx`
 Provider with the same `StoreValue` shape as `store.tsx`:
