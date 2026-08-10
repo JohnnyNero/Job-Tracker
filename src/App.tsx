@@ -7,6 +7,8 @@ import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
 import { Settings } from './components/Settings'
 import { Guide } from './components/Guide'
+import { Group } from './components/Group'
+import { isOnline } from './store/supabaseClient'
 
 export function App() {
   const route = useRoute()
@@ -23,6 +25,7 @@ export function App() {
         {route.name === 'cv' && <CvLocker />}
         {route.name === 'settings' && <Settings />}
         {route.name === 'guide' && <Guide />}
+        {route.name === 'group' && <Group />}
         {route.name === 'not_found' && <NotFound path={route.path} />}
       </main>
     </div>
@@ -45,6 +48,7 @@ function Nav({ routeName }: { routeName: string }) {
       {tab(routes.evidence(), 'Evidence', routeName === 'evidence')}
       {tab(routes.profiles(), 'Role profiles', routeName === 'profiles')}
       {tab(routes.cv(), 'CV locker', routeName === 'cv')}
+      {isOnline && tab(routes.group(), 'Group', routeName === 'group')}
       {tab(routes.settings(), 'Settings', routeName === 'settings')}
       <span className="spacer" />
       {tab(routes.guide(), 'Guide', routeName === 'guide')}

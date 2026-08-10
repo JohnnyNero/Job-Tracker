@@ -95,6 +95,20 @@ In the GitHub repo: **Settings → Secrets and variables → Actions** → add
 reads them (empty is fine until you add them). Push to `main` to build and
 publish.
 
+## Accountability groups (optional)
+
+To enable the shared accountability feature:
+
+1. Run [`../supabase/migrations/0002_accountability_groups.sql`](../supabase/migrations/0002_accountability_groups.sql)
+   in the SQL editor (after `0001_init.sql`).
+2. Enable new sign-ups: **Authentication → Providers → Email → allow new users
+   to sign up**, so a partner can create their own account.
+3. Verify privacy after setup, signed in as two different users in one group:
+   - `select * from group_summary('<group-id>')` returns a counts row per member.
+   - A non-member calling `group_summary` for that group gets zero rows.
+   - A member still CANNOT read another member's rows directly:
+     `select * from applications` returns only their own (RLS unchanged).
+
 ---
 
 ### Note on free-tier pausing
