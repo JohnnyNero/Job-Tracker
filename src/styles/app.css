@@ -827,6 +827,11 @@ table.pipeline td.company-cell {
     display: block;
   }
 }
+/* Grid items default to min-width:auto, which lets wide children (long titles,
+   textareas) push a pane past the viewport. Let panes shrink to their track. */
+.compose-pane {
+  min-width: 0;
+}
 .compose-pane .panel + .panel {
   margin-top: 16px;
 }
@@ -1002,6 +1007,8 @@ table.pipeline td.company-cell {
 }
 .prep-q-text {
   flex: 1;
+  min-width: 0; /* a textarea's cols-based intrinsic width otherwise refuses to
+                   shrink, widening the whole pane past the viewport on phones */
   resize: none;
   overflow: hidden;
   min-height: 34px;
@@ -1267,6 +1274,15 @@ table.pipeline td.company-cell {
 @media (prefers-reduced-motion: reduce) {
   [data-tip]::after {
     transition: none;
+  }
+}
+/* The tooltip is a hover affordance. Even while invisible it's laid out, and
+   anchored near the right edge it widens the document — which is what made the
+   page scroll sideways / zoom out on phones. Touch can't hover it usefully and
+   the visible labels already say the same thing, so drop it on phones. */
+@media (max-width: 640px) {
+  [data-tip]::after {
+    display: none;
   }
 }
 

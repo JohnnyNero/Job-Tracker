@@ -313,7 +313,7 @@ function QuestionCard({ q, first, last }: { q: InterviewQuestion; first: boolean
           value={q.covered_by ?? ''}
           onChange={(e) => store.updateInterviewQuestion(q.id, { covered_by: e.target.value || null })}
           aria-label="Evidence story for this question"
-          style={{ width: 'auto', flex: 1, maxWidth: 320 }}
+          style={{ width: 'auto', flex: 1, minWidth: 0, maxWidth: 320 }}
         >
           <option value="">— pick a story —</option>
           {evidence.map((ev) => (
