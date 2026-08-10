@@ -101,6 +101,15 @@ a:hover {
   color: var(--text);
   background: var(--surface-2);
 }
+/* Icons + short labels are for the mobile bottom bar only; desktop is text. */
+.nav a.tab {
+  display: inline-flex;
+  align-items: center;
+}
+.nav .tab-icon,
+.nav .tab-short {
+  display: none;
+}
 .nav .spacer {
   flex: 1;
 }
@@ -540,6 +549,77 @@ table.pipeline td.company-cell {
 }
 .days.red {
   color: var(--tone-red-fg);
+}
+
+/* Pipeline cards (mobile only) — a readable stand-in for the dense table.
+   The component renders these below 640px; hidden implicitly elsewhere. */
+.mobile-sort {
+  display: none;
+}
+.pl-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pl-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pl-card:active {
+  background: var(--surface-2);
+}
+.pl-card.closed {
+  opacity: 0.6;
+}
+.pl-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pl-card-title {
+  min-width: 0;
+}
+.pl-card-role {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+}
+.pl-card-company {
+  display: block;
+  color: var(--text-2);
+  font-size: 13px;
+  margin-top: 1px;
+}
+.pl-card-top .days {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+.pl-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.pl-card-bottom .stage-select {
+  max-width: none;
+  border-color: var(--border);
+  background: var(--surface-2);
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.pl-card-profile {
+  font-size: 12px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
 }
 
 /* ------------------------------------------------------------------ detail */
@@ -1015,6 +1095,42 @@ table.pipeline td.company-cell {
   color: var(--text-2);
 }
 
+/* On phones a floating card pushes its actions below the fold. Make dialogs a
+   full-height sheet with the actions pinned to the bottom, always reachable. */
+@media (max-width: 640px) {
+  .overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+  .dialog,
+  .dialog.dialog-wide {
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+  /* The body scrolls; the action row sticks to the bottom edge. */
+  .dialog .actions {
+    position: sticky;
+    bottom: calc(-1 * env(safe-area-inset-bottom));
+    margin: 16px -16px calc(-16px - env(safe-area-inset-bottom));
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .dialog .actions .btn {
+    flex: 1;
+  }
+  .outcome-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ------------------------------------------------------------------ empty */
 .empty {
   border: 1px dashed var(--border-strong);
@@ -1250,32 +1366,63 @@ kbd {
   }
 }
 
-/* Phones */
+/* Phones — the top nav becomes a fixed bottom tab bar (thumb-reachable).
+   Each screen carries its own <h1> title, so dropping the top bar is fine and
+   buys back vertical space. */
 @media (max-width: 640px) {
-  :root {
-    --h-nav: 48px;
-  }
   .nav {
-    padding: 0 10px;
-    gap: 2px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    box-shadow: 0 -1px 3px rgba(16, 24, 40, 0.06);
+    justify-content: space-between;
   }
-  .nav::-webkit-scrollbar {
-    display: none;
-  }
+  .nav .brand,
+  .nav .spacer,
   .nav .kbd-hint {
     display: none;
   }
-  .nav .brand {
-    margin-right: 8px;
-    font-size: 14px;
-    flex: 0 0 auto;
-  }
   .nav a.tab {
-    padding: 7px 9px;
-    flex: 0 0 auto;
-    white-space: nowrap;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 2px;
+    min-width: 0;
+    border-radius: var(--radius-sm);
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .nav a.tab:hover {
+    background: transparent;
+  }
+  .nav a.tab.active {
+    color: var(--accent);
+    background: transparent;
+  }
+  .nav .tab-icon {
+    display: flex;
+  }
+  .nav .tab-full {
+    display: none;
+  }
+  .nav .tab-short {
+    display: inline;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  /* Give page content room above the fixed bar. */
+  .page {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
   }
   .field-grid,
   .outcome-grid {
@@ -1295,9 +1442,9 @@ kbd {
   table.pipeline td.role-cell {
     min-width: 0;
   }
-  /* the "silent/closes" word is clipped in a narrow cell — number + colour
-     carry the signal on their own here */
-  .days .lbl {
+  /* In the (tablet) table the "silent/closes" word is clipped in a narrow cell —
+     number + colour carry the signal. Cards have room, so keep the word there. */
+  table.pipeline .days .lbl {
     display: none;
   }
   .stage-select {
@@ -1312,6 +1459,37 @@ kbd {
   /* Touch targets: give small buttons a little more height on phones. */
   .btn.small {
     padding: 6px 10px;
+  }
+  /* Filters: search full-width; profile + sort share a row. */
+  .filters {
+    gap: 8px;
+  }
+  .filters .search-box {
+    order: 3;
+    width: 100%;
+  }
+  .filters .search-box input {
+    width: 100%;
+  }
+  .filters > select {
+    order: 2;
+    flex: 1 1 40%;
+  }
+  .mobile-sort {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 40%;
+  }
+  .mobile-sort .lbl {
+    font-size: 12px;
+    color: var(--text-3);
+    flex: 0 0 auto;
+  }
+  .mobile-sort select {
+    flex: 1;
+    width: auto;
   }
 }
 

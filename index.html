@@ -2,13 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="A private, offline-first job application tracker — capture roles, tailor answers from reusable evidence, and never let an application go silently stale."
+    />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f6df6'/%3E%3Crect x='8' y='12' width='16' height='12' rx='2' fill='white'/%3E%3Crect x='12' y='9' width='8' height='4' rx='1.5' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E"
       type="image/svg+xml"
     />
+    <!-- PWA: manifest + icons. Relative paths resolve against the app's base
+         path, so a VITE_BASE override (custom domain) still works. -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1319" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Job Tracker" />
     <title>Job Tracker</title>
   </head>
   <body>

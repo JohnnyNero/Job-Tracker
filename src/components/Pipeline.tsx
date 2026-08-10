@@ -7,7 +7,7 @@ import { daysSignal, fmtDate } from '../lib/dates'
 import { buildTriage } from '../lib/triage'
 import type { TriagedApp } from '../lib/triage'
 import { navigate, routes } from '../router'
-import { EmptyState, isTypingTarget, useEscape, useModalFocus } from './common'
+import { EmptyState, isTypingTarget, useEscape, useMediaQuery, useModalFocus } from './common'
 import { NewApplicationDialog } from './NewApplicationDialog'
 import { CloseDialog } from './CloseDialog'
 
@@ -57,6 +57,7 @@ export function Pipeline() {
   const [sortKey, setSortKey] = useState<SortKey>('days')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [selected, setSelected] = useState(0)
+  const isMobile = useMediaQuery('(max-width: 640px)')
   const [showNew, setShowNew] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [closingId, setClosingId] = useState<string | null>(null)
@@ -315,8 +316,58 @@ export function Pipeline() {
                 }}
               />
             </div>
+
+            {/* Mobile has no sortable column headers, so surface sort here. */}
+            <label className="mobile-sort">
+              <span className="lbl">Sort</span>
+              <select
+                value={`${sortKey}:${sortDir}`}
+                onChange={(e) => {
+                  const [k, d] = e.target.value.split(':') as [SortKey, 'asc' | 'desc']
+                  setSortKey(k)
+                  setSortDir(d)
+                }}
+                aria-label="Sort applications"
+              >
+                <option value="days:desc">Most urgent</option>
+                <option value="applied_on:desc">Recently applied</option>
+                <option value="closes_on:asc">Closing soonest</option>
+                <option value="role:asc">Role A–Z</option>
+                <option value="company:asc">Company A–Z</option>
+                <option value="stage:desc">Stage</option>
+              </select>
+            </label>
           </div>
 
+          {isMobile ? (
+            <div className="pl-cards">
+              {rows.length === 0 ? (
+                <div className="empty" style={{ padding: '28px 20px' }}>
+                  Nothing matches this filter.{' '}
+                  <button
+                    className="btn small"
+                    onClick={() => {
+                      setFilter('all')
+                      setProfileFilter('')
+                      setSearch('')
+                    }}
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                rows.map((app) => (
+                  <PipelineCard
+                    key={app.id}
+                    app={app}
+                    profileName={profileName(app.profile_id)}
+                    onOpen={() => navigate(routes.application(app.id))}
+                    onStageChange={(s) => onStageChange(app, s)}
+                  />
+                ))
+              )}
+            </div>
+          ) : (
           <div className="table-wrap">
             <table className="pipeline">
               <thead>
@@ -356,6 +407,7 @@ export function Pipeline() {
               </tbody>
             </table>
           </div>
+          )}
         </>
       )}
 
@@ -483,6 +535,71 @@ function PipelineRow({
         )}
       </td>
     </tr>
+  )
+}
+
+/** Phone-friendly card for one application: role/company, a stage picker, the
+ * days signal, and profile — tap anywhere else to open. Replaces the cramped
+ * table row on narrow screens. */
+function PipelineCard({
+  app,
+  profileName,
+  onOpen,
+  onStageChange,
+}: {
+  app: Application
+  profileName: string
+  onOpen: () => void
+  onStageChange: (s: Stage) => void
+}) {
+  const sig = daysSignal(app)
+  const tone = STAGE_TONE[app.stage]
+  return (
+    <div
+      className={`pl-card ${app.stage === 'closed' ? 'closed' : ''}`}
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
+    >
+      <div className="pl-card-top">
+        <div className="pl-card-title">
+          <span className="pl-card-role">{app.role}</span>
+          {app.company && <span className="pl-card-company">{app.company}</span>}
+        </div>
+        {sig ? (
+          <span className={`days ${sig.tone}`} title={sig.title} aria-label={sig.title}>
+            {sig.value}
+            <span className="lbl">{sig.label}</span>
+          </span>
+        ) : (
+          <span className="muted" aria-hidden>
+            —
+          </span>
+        )}
+      </div>
+      <div className="pl-card-bottom" onClick={(e) => e.stopPropagation()}>
+        <select
+          className="stage-select"
+          style={{ color: `var(--pill-${tone}-fg)` }}
+          value={app.stage}
+          onChange={(e) => onStageChange(e.target.value as Stage)}
+          aria-label={`Stage for ${app.role}`}
+        >
+          {STAGES.map((s) => (
+            <option key={s} value={s}>
+              {STAGE_LABELS[s]}
+            </option>
+          ))}
+        </select>
+        {profileName && <span className="pl-card-profile">{profileName}</span>}
+      </div>
+    </div>
   )
 }
 

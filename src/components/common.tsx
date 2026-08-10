@@ -1,7 +1,23 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import type { Stage } from '../types'
 import { STAGE_LABELS, STAGE_TONE } from '../lib/constants'
+
+/** Reactively track a media query — lets a component swap layout (e.g. table vs
+ * cards) at a breakpoint without relying on CSS alone. SSR-safe default. */
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+  )
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    const onChange = () => setMatches(mql.matches)
+    onChange()
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [query])
+  return matches
+}
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'

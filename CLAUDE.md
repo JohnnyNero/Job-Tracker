@@ -65,12 +65,22 @@ Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
   found". Sample data is opt-in (Settings), never auto-loaded, so empty states
   stay visible.
 - **Desktop-first, but fits any screen.** Built for ~1440px; multi-column
-  layouts, dense tables, keyboard shortcuts. It now also collapses cleanly to a
-  phone: layouts stack to one column, the pipeline hides low-priority columns
-  (keeping role/stage/days), the three-pane composer and master-detail screens
-  stack, and the page never scrolls sideways. Responsive rules live at the
-  bottom of `src/styles/app.css`. Keep column layouts in CSS classes (e.g.
-  `.master-detail`), not inline styles, so the media-query collapse still wins.
+  layouts, dense tables, keyboard shortcuts. It also collapses cleanly to a
+  phone (≤640px): the top nav becomes a **fixed bottom tab bar** with icons
+  (`NavIcons.tsx`; each screen carries its own `<h1>`), the pipeline table
+  becomes a **card list** (`PipelineCard` + a sort `<select>`, gated by
+  `useMediaQuery`), dialogs become **full-screen sheets** with a sticky action
+  footer, the three-pane composer / prep / master-detail screens stack, and the
+  page never scrolls sideways. Responsive rules live at the bottom of
+  `src/styles/app.css`; `env(safe-area-inset-*)` keeps the bottom bar clear of
+  the home indicator. Keep column layouts in CSS classes, not inline styles.
+- **Installable PWA.** `public/manifest.webmanifest` + `public/sw.js` (registered
+  in `main.tsx`, production only) make it installable and fully offline — the SW
+  caches the app shell (navigations network-first → cached shell; assets
+  stale-while-revalidate). Icons in `public/icons/` are pre-rendered PNGs of the
+  briefcase mark (standard + maskable); re-raster from the SVG if the mark
+  changes. Bump `CACHE` in `sw.js` to evict old caches. PWA paths are
+  **relative**, so a `VITE_BASE` override (custom domain) still resolves.
 - **Accessibility:** visible focus is never removed; `prefers-reduced-motion` is
   respected; dialogs close on `Esc`.
 - Match the surrounding style: TypeScript strict, no non-null-assertion soup,

@@ -1,4 +1,13 @@
+import type { ReactNode } from 'react'
 import { useRoute, routes } from './router'
+import {
+  PipelineIcon,
+  EvidenceIcon,
+  ProfilesIcon,
+  CvIcon,
+  SettingsIcon,
+  GuideIcon,
+} from './components/NavIcons'
 import { Pipeline } from './components/Pipeline'
 import { ApplicationDetail } from './components/ApplicationDetail'
 import { Composer } from './components/Composer'
@@ -32,9 +41,17 @@ export function App() {
 }
 
 function Nav({ routeName }: { routeName: string }) {
-  const tab = (href: string, label: string, active: boolean) => (
-    <a className={`tab ${active ? 'active' : ''}`} href={href}>
-      {label}
+  const tab = (
+    href: string,
+    label: string,
+    short: string,
+    icon: ReactNode,
+    active: boolean,
+  ) => (
+    <a className={`tab ${active ? 'active' : ''}`} href={href} aria-current={active ? 'page' : undefined}>
+      <span className="tab-icon">{icon}</span>
+      <span className="tab-full">{label}</span>
+      <span className="tab-short">{short}</span>
     </a>
   )
   return (
@@ -43,13 +60,13 @@ function Nav({ routeName }: { routeName: string }) {
         <span className="dot" />
         Job Tracker
       </a>
-      {tab(routes.pipeline(), 'Pipeline', routeName === 'pipeline' || routeName === 'application')}
-      {tab(routes.evidence(), 'Evidence', routeName === 'evidence')}
-      {tab(routes.profiles(), 'Role profiles', routeName === 'profiles')}
-      {tab(routes.cv(), 'CV locker', routeName === 'cv')}
-      {tab(routes.settings(), 'Settings', routeName === 'settings')}
+      {tab(routes.pipeline(), 'Pipeline', 'Pipeline', <PipelineIcon />, routeName === 'pipeline' || routeName === 'application' || routeName === 'compose' || routeName === 'prep')}
+      {tab(routes.evidence(), 'Evidence', 'Evidence', <EvidenceIcon />, routeName === 'evidence')}
+      {tab(routes.profiles(), 'Role profiles', 'Profiles', <ProfilesIcon />, routeName === 'profiles')}
+      {tab(routes.cv(), 'CV locker', 'CV', <CvIcon />, routeName === 'cv')}
+      {tab(routes.settings(), 'Settings', 'Settings', <SettingsIcon />, routeName === 'settings')}
       <span className="spacer" />
-      {tab(routes.guide(), 'Guide', routeName === 'guide')}
+      {tab(routes.guide(), 'Guide', 'Guide', <GuideIcon />, routeName === 'guide')}
     </nav>
   )
 }
