@@ -13,6 +13,11 @@ const withEvents = (evs: Array<Record<string, unknown>>): Dataset => ({
   events: evs as unknown as Dataset['events'],
 })
 
+const withAe = (rows: Array<{ application_id: string; evidence_id: string }>): Dataset => ({
+  ...emptyDataset(),
+  application_evidence: rows as unknown as Dataset['application_evidence'],
+})
+
 describe('computeDiff', () => {
   test('insert: id present in next, absent in prev', () => {
     const ops = computeDiff(emptyDataset(), withApp([{ id: 'a1', role: 'Dev' }]))
@@ -59,5 +64,34 @@ describe('computeDiff', () => {
     const prev = withEvents([{ id: 'ev1', kind: 'note', body: 'a' }])
     const next = withEvents([{ id: 'ev1', kind: 'note', body: 'b' }])
     expect(computeDiff(prev, next)).toEqual([])
+  })
+
+  test('application_evidence insert is keyed on the composite pair', () => {
+    const ops = computeDiff(emptyDataset(), withAe([{ application_id: 'a1', evidence_id: 'e1' }]))
+    expect(ops).toEqual([
+      { op: 'insert', table: 'application_evidence', row: { application_id: 'a1', evidence_id: 'e1' } },
+    ])
+  })
+
+  test('multiple application_evidence rows do not collapse to one key', () => {
+    const ops = computeDiff(
+      emptyDataset(),
+      withAe([
+        { application_id: 'a1', evidence_id: 'e1' },
+        { application_id: 'a2', evidence_id: 'e1' },
+      ]),
+    )
+    expect(ops).toHaveLength(2)
+  })
+
+  test('application_evidence delete uses composite match, not id', () => {
+    const ops = computeDiff(withAe([{ application_id: 'a1', evidence_id: 'e1' }]), emptyDataset())
+    expect(ops).toEqual([
+      {
+        op: 'delete',
+        table: 'application_evidence',
+        match: { application_id: 'a1', evidence_id: 'e1' },
+      },
+    ])
   })
 })

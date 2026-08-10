@@ -5,6 +5,8 @@ import type { RowOp } from './diffSync'
 const url = import.meta.env.VITE_SUPABASE_URL
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Placeholder values shipped in .env.example — keep these literals in sync with
+// that file so a copied-but-unfilled .env stays offline.
 const looksReal =
   !!url &&
   !!anon &&
@@ -75,7 +77,13 @@ export async function applyOp(op: RowOp): Promise<void> {
     const { error } = await supabase.from(op.table).update(op.row).eq('id', op.id)
     if (error) throw error
   } else {
-    const { error } = await supabase.from(op.table).delete().eq('id', op.id)
+    let query = supabase.from(op.table).delete()
+    if (op.match) {
+      for (const [k, v] of Object.entries(op.match)) query = query.eq(k, v)
+    } else {
+      query = query.eq('id', op.id!)
+    }
+    const { error } = await query
     if (error) throw error
   }
 }

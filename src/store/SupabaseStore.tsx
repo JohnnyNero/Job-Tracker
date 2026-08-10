@@ -44,12 +44,16 @@ export function SupabaseStore({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Serialize pushes so each op batch + reconcile completes before the next
+  // begins — otherwise an in-flight reconcile can revert a newer optimistic edit.
+  const pushChain = useRef<Promise<void>>(Promise.resolve())
+
   const commit = useCallback(
     (next: Dataset) => {
       const prev = ref.current
       ref.current = next
       setData(next)
-      void push(prev, next)
+      pushChain.current = pushChain.current.then(() => push(prev, next))
     },
     [push],
   )
