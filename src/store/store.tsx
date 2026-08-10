@@ -19,7 +19,7 @@ import * as m from './mutations'
 // actions. Swapping to Supabase later means writing a provider with this same
 // value shape (async under the hood) — no screen needs to change.
 
-interface StoreValue {
+export interface StoreValue {
   data: Dataset
 
   // applications
@@ -77,7 +77,7 @@ interface StoreValue {
   replaceAll: (data: Dataset) => void
 }
 
-const StoreContext = createContext<StoreValue | null>(null)
+export const StoreContext = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Dataset>(loadDataset)
