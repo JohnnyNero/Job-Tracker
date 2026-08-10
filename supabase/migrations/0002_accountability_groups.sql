@@ -117,14 +117,14 @@ begin
   if g.id is null then
     raise exception 'No group found for that code';
   end if;
+  -- Serialize concurrent joins to this group so the cap check is race-free.
+  perform 1 from groups where id = g.id for update;
   select count(*) into n from group_members where group_id = g.id;
   if n >= 10 then
     raise exception 'That group is full';
   end if;
   delete from group_members where user_id = auth.uid();
-  insert into group_members (group_id, user_id)
-    values (g.id, auth.uid())
-    on conflict do nothing;
+  insert into group_members (group_id, user_id) values (g.id, auth.uid());
   return g;
 end;
 $$;
