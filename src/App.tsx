@@ -17,6 +17,7 @@ import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
 import { Settings } from './components/Settings'
 import { Guide } from './components/Guide'
+import { FindJobs } from './components/FindJobs'
 import { DataBanners } from './components/DataBanners'
 
 export function App() {
@@ -27,7 +28,10 @@ export function App() {
       <Nav routeName={route.name} />
       <main className="page-wrap">
         <DataBanners />
-        {route.name === 'pipeline' && <Pipeline />}
+        {(route.name === 'pipeline' || route.name === 'new') && (
+          <Pipeline initialNew={route.name === 'new' ? route.prefill : undefined} />
+        )}
+        {route.name === 'find' && <FindJobs />}
         {route.name === 'application' && <ApplicationDetail id={route.id} />}
         {route.name === 'compose' && <Composer id={route.id} />}
         {route.name === 'prep' && <InterviewPrep id={route.id} />}
@@ -62,7 +66,7 @@ function Nav({ routeName }: { routeName: string }) {
         <span className="dot" />
         Job Tracker
       </a>
-      {tab(routes.pipeline(), 'Pipeline', 'Pipeline', <PipelineIcon />, routeName === 'pipeline' || routeName === 'application' || routeName === 'compose' || routeName === 'prep')}
+      {tab(routes.pipeline(), 'Pipeline', 'Pipeline', <PipelineIcon />, routeName === 'pipeline' || routeName === 'new' || routeName === 'find' || routeName === 'application' || routeName === 'compose' || routeName === 'prep')}
       {tab(routes.evidence(), 'Evidence', 'Evidence', <EvidenceIcon />, routeName === 'evidence')}
       {tab(routes.profiles(), 'Role profiles', 'Profiles', <ProfilesIcon />, routeName === 'profiles')}
       {tab(routes.cv(), 'CV locker', 'CV', <CvIcon />, routeName === 'cv')}

@@ -7,6 +7,7 @@ import { daysSignal, fmtDate } from '../lib/dates'
 import { buildTriage } from '../lib/triage'
 import type { TriagedApp } from '../lib/triage'
 import { navigate, routes } from '../router'
+import type { NewPrefill } from '../router'
 import { EmptyState, isTypingTarget, Ring, useEscape, useMediaQuery, useModalFocus } from './common'
 import { NewApplicationDialog } from './NewApplicationDialog'
 import { CloseDialog } from './CloseDialog'
@@ -50,7 +51,7 @@ function urgency(app: Application): number | null {
   return sig.label === 'silent' ? sig.value : 1000 - sig.value
 }
 
-export function Pipeline() {
+export function Pipeline({ initialNew }: { initialNew?: NewPrefill }) {
   const store = useStore()
   const apps = store.data.applications
 
@@ -61,7 +62,15 @@ export function Pipeline() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [selected, setSelected] = useState(0)
   const isMobile = useMediaQuery('(max-width: 640px)')
-  const [showNew, setShowNew] = useState(false)
+  // Opened via #/new (bookmarklet / phone share): open the dialog prefilled and
+  // strip the capture params so a refresh doesn't reopen it.
+  const [newPrefill] = useState(initialNew)
+  const [showNew, setShowNew] = useState(!!initialNew)
+  useEffect(() => {
+    if (initialNew) navigate(routes.pipeline())
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [showHelp, setShowHelp] = useState(false)
   const [closingId, setClosingId] = useState<string | null>(null)
 
@@ -233,6 +242,9 @@ export function Pipeline() {
         <h1>Pipeline</h1>
         <span className="sub">Your applications, most urgent first.</span>
         <span className="spacer" style={{ flex: 1 }} />
+        <a className="btn" href={routes.find()}>
+          Find jobs
+        </a>
         <button className="btn primary" onClick={() => setShowNew(true)}>
           + New application <span className="muted" style={{ opacity: 0.8 }}>n</span>
         </button>
@@ -433,7 +445,7 @@ export function Pipeline() {
         </>
       )}
 
-      {showNew && <NewApplicationDialog onClose={() => setShowNew(false)} />}
+      {showNew && <NewApplicationDialog prefill={newPrefill} onClose={() => setShowNew(false)} />}
       {closingId && (
         <CloseDialog
           app={apps.find((a) => a.id === closingId)!}
@@ -560,6 +572,9 @@ function GuidanceRow({ it, onNew }: { it: GuidanceItem; onNew: () => void }) {
         · keep a few more in flight so momentum holds.
       </span>
       <span className="t-actions">
+        <a className="btn small" href={routes.find()}>
+          Find jobs
+        </a>
         <button className="btn small primary" onClick={onNew}>
           + New
         </button>

@@ -328,15 +328,25 @@ export function clearUndo(): void {
 // per-device, not domain data, so it never bloats an export or a future sync.
 const PREFS_KEY = STORAGE_KEY + ':prefs'
 
+/** A saved job search: keywords + where, run against the board deep-links. */
+export interface SavedSearch {
+  id: string
+  keywords: string
+  location: string
+  remote: boolean
+}
+
 export interface Prefs {
   /** The getting-started checklist has been dismissed. */
   checklistDismissed: boolean
   /** Weekly tailored-application target for the progress ring. */
   weeklyTarget: number
+  /** Saved job searches for the "Find jobs" launcher. */
+  savedSearches: SavedSearch[]
 }
 
 export function defaultPrefs(): Prefs {
-  return { checklistDismissed: false, weeklyTarget: 5 }
+  return { checklistDismissed: false, weeklyTarget: 5, savedSearches: [] }
 }
 
 export function loadPrefs(): Prefs {
@@ -348,6 +358,19 @@ export function loadPrefs(): Prefs {
       checklistDismissed: typeof p.checklistDismissed === 'boolean' ? p.checklistDismissed : false,
       weeklyTarget:
         typeof p.weeklyTarget === 'number' && p.weeklyTarget > 0 ? Math.round(p.weeklyTarget) : 5,
+      savedSearches: Array.isArray(p.savedSearches)
+        ? p.savedSearches
+            .filter(
+              (s): s is SavedSearch =>
+                !!s && typeof s === 'object' && typeof (s as SavedSearch).id === 'string',
+            )
+            .map((s) => ({
+              id: String(s.id),
+              keywords: typeof s.keywords === 'string' ? s.keywords : '',
+              location: typeof s.location === 'string' ? s.location : '',
+              remote: typeof s.remote === 'boolean' ? s.remote : false,
+            }))
+        : [],
     }
   } catch {
     return defaultPrefs()

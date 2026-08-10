@@ -1,12 +1,31 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore, emptyDataset } from '../store/store'
 import { normaliseDataset } from '../store/localStore'
 import { sampleDataset } from '../store/sample'
+import { routes } from '../router'
+
+// The clip bookmarklet: runs on any job page and hands the URL + title +
+// selection to the #/new capture route. Built against wherever the app is
+// actually served so it works on Pages or a custom domain.
+const APP_URL = window.location.origin + import.meta.env.BASE_URL
+const BOOKMARKLET =
+  "javascript:(function(){var b='" +
+  APP_URL +
+  "';var u=encodeURIComponent(location.href),t=encodeURIComponent(document.title)," +
+  "s=encodeURIComponent((''+(window.getSelection?window.getSelection():'')).slice(0,600));" +
+  "location.href=b+'#/new?url='+u+'&title='+t+'&text='+s;})();"
 
 export function Settings() {
   const store = useStore()
   const fileRef = useRef<HTMLInputElement>(null)
+  const bmRef = useRef<HTMLAnchorElement>(null)
   const [msg, setMsg] = useState<string | null>(null)
+
+  // React strips `javascript:` hrefs, so set the bookmarklet's href on the DOM
+  // node directly. It's a drag-to-bookmarks link, never navigated in-app.
+  useEffect(() => {
+    if (bmRef.current) bmRef.current.setAttribute('href', BOOKMARKLET)
+  }, [])
 
   const counts = {
     applications: store.data.applications.length,
@@ -122,6 +141,30 @@ export function Settings() {
         </div>
         <p className="section-note">
           Both replace whatever is currently loaded. Export first if you care about it.
+        </p>
+      </div>
+
+      <div className="panel">
+        <h2>Finding jobs</h2>
+        <p className="section-note" style={{ marginTop: 0 }}>
+          Two ways to drop a job you&rsquo;re looking at straight into your pipeline — both open the
+          new-application form pre-filled. Looking for where to search? Open{' '}
+          <a href={routes.find()}>Find jobs</a>.
+        </p>
+        <div className="bm-row">
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <a ref={bmRef} className="btn primary bm-link" onClick={(e) => e.preventDefault()}>
+            📎 Clip to Job Tracker
+          </a>
+          <span className="muted" style={{ fontSize: 13 }}>
+            <strong>Drag this to your bookmarks bar.</strong> Then, on any job listing, click it to
+            capture the page — title, link, and any text you&rsquo;ve selected.
+          </span>
+        </div>
+        <p className="section-note" style={{ marginTop: 12 }}>
+          <strong>On your phone:</strong> install the app (Add to Home Screen), then use a
+          listing&rsquo;s <strong>Share</strong> button and pick <strong>Job Tracker</strong> to send
+          it in. (Android; iOS uses the bookmarklet.)
         </p>
       </div>
 

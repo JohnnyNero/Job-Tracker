@@ -9,6 +9,47 @@ export interface ParsedAd {
   salary?: string
 }
 
+/** Guess role (and sometimes company) from a captured page <title>. Titles come
+ * in a few shapes: "Company hiring Role in Location | LinkedIn", "Role at
+ * Company", "Role - Company - Location | Indeed.com". Rough on purpose — the
+ * user fixes it in the dialog. */
+export function titleToRoleCompany(title: string): { role: string; company: string } {
+  let t = title
+    // drop a trailing " | Site" / " - Site" suffix for the common boards
+    .replace(
+      /\s*[|\-–—]\s*(indeed(\.com)?|linkedin|glassdoor|reed(\.co\.uk)?|totaljobs|monster|ziprecruiter|welcome to the jungle|otta)\b.*$/i,
+      '',
+    )
+    .trim()
+  let m = t.match(/^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+.+)?$/i) // LinkedIn
+  if (m) return { role: m[2].trim(), company: m[1].trim() }
+  m = t.match(/^(.+?)\s+at\s+(.+)$/i)
+  if (m) return { role: m[1].trim(), company: m[2].trim() }
+  const parts = t.split(/\s+[-–—]\s+/)
+  if (parts.length >= 2) return { role: parts[0].trim(), company: parts[1].trim() }
+  return { role: t, company: '' }
+}
+
+/** Infer a source label from a captured URL's host (Indeed / LinkedIn / …). */
+export function sourceFromUrl(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '').toLowerCase()
+    const map: [RegExp, string][] = [
+      [/indeed\./, 'Indeed'],
+      [/linkedin\./, 'LinkedIn'],
+      [/glassdoor\./, 'Glassdoor'],
+      [/reed\.co/, 'Reed'],
+      [/totaljobs\./, 'Totaljobs'],
+      [/monster\./, 'Monster'],
+      [/ziprecruiter\./, 'ZipRecruiter'],
+    ]
+    for (const [re, label] of map) if (re.test(host)) return label
+    return host
+  } catch {
+    return ''
+  }
+}
+
 function firstLabel(lines: string[], re: RegExp): string | undefined {
   for (const l of lines) {
     const m = l.match(re)

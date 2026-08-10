@@ -69,8 +69,17 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   since it's per-device UI config, not domain data.
 - `src/lib/` — `constants` (stages, tones, labels), `dates` (the days-silent
   signal), `id`.
-- `src/router.ts` — tiny hash router (`#/`, `#/app/:id`, `#/compose/:id`,
-  `#/prep/:id`, `#/evidence`, `#/profiles`, `#/cv`, `#/settings`, `#/guide`).
+- `src/router.ts` — tiny hash router (`#/`, `#/new`, `#/find`, `#/app/:id`,
+  `#/compose/:id`, `#/prep/:id`, `#/evidence`, `#/profiles`, `#/cv`,
+  `#/settings`, `#/guide`).
+- **Job finding / capture.** `#/find` (`FindJobs.tsx` + `src/lib/boards.ts`)
+  builds job-board deep links from keywords/location — it opens searches, never
+  scrapes. `#/new?url=&title=&text=` opens the New Application dialog pre-filled
+  (`titleToRoleCompany`/`sourceFromUrl` in `parseAd.ts`); it's fed by the **clip
+  bookmarklet** (built in `Settings.tsx` against the served origin) and the PWA
+  **share_target** (manifest `action: "."` → GET params, folded into `#/new` by
+  a bootstrap in `main.tsx` before React reads the hash). Saved searches live in
+  `prefs`.
 
 Full detail: `docs/architecture.md`. Data model: `docs/data-model.md`.
 Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.

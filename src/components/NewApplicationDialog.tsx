@@ -1,36 +1,59 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store/store'
+import type { NewPrefill } from '../router'
 import { useEscape, useModalFocus } from './common'
 import { navigate, routes } from '../router'
 import { SOURCE_SUGGESTIONS } from '../lib/constants'
-import { parseAd } from '../lib/parseAd'
+import { parseAd, titleToRoleCompany, sourceFromUrl } from '../lib/parseAd'
 import { splitCriteria } from '../lib/criteria'
+
+// Compute initial field values from a capture prefill (bookmarklet / share):
+// selection text runs through the ad parser; the page title backfills role /
+// company; the URL becomes the link and infers the source.
+function initialFrom(prefill?: NewPrefill) {
+  const pf = prefill ?? {}
+  const ad = pf.text ?? ''
+  const p = ad ? parseAd(ad) : {}
+  const t = pf.title ? titleToRoleCompany(pf.title) : { role: '', company: '' }
+  return {
+    adText: ad,
+    role: p.role || t.role || '',
+    company: p.company || t.company || '',
+    location: p.location || '',
+    salary: p.salary || '',
+    link: pf.url ?? '',
+    source: pf.url ? sourceFromUrl(pf.url) : '',
+    filled: !!(p.role || t.role || p.company || t.company),
+  }
+}
 
 // Paste-to-create. Paste the ad and the fields fill themselves; the ad is
 // archived and its requirements seed the criteria checklist — so capturing an
 // application costs one paste, not a form. Role is the only required field.
-export function NewApplicationDialog({ onClose }: { onClose: () => void }) {
+// A capture prefill (from the bookmarklet or the phone share sheet) seeds it.
+export function NewApplicationDialog({ onClose, prefill }: { onClose: () => void; prefill?: NewPrefill }) {
   const store = useStore()
   const ref = useRef<HTMLDivElement>(null)
   useEscape(onClose)
   useModalFocus(ref)
 
-  const [adText, setAdText] = useState('')
-  const [role, setRole] = useState('')
-  const [company, setCompany] = useState('')
-  const [location, setLocation] = useState('')
-  const [salary, setSalary] = useState('')
+  const [init] = useState(() => initialFrom(prefill))
+  const [adText, setAdText] = useState(init.adText)
+  const [role, setRole] = useState(init.role)
+  const [company, setCompany] = useState(init.company)
+  const [location, setLocation] = useState(init.location)
+  const [salary, setSalary] = useState(init.salary)
   const [profileId, setProfileId] = useState('')
-  const [source, setSource] = useState('')
-  const [link, setLink] = useState('')
-  const [filled, setFilled] = useState(false)
+  const [source, setSource] = useState(init.source)
+  const [link, setLink] = useState(init.link)
+  const [filled, setFilled] = useState(init.filled)
 
   // Remember what we auto-filled so a re-parse never clobbers a manual edit.
   const auto = useRef<{ role: string; company: string; location: string; salary: string }>({
-    role: '',
-    company: '',
-    location: '',
-    salary: '',
+    role: init.role,
+    company: init.company,
+    location: init.location,
+    salary: init.salary,
   })
 
   const canSave = role.trim().length > 0

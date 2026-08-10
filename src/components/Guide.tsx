@@ -32,6 +32,31 @@ export function Guide() {
         </ol>
       </Section>
 
+      <Section title="Finding & capturing jobs">
+        <p>
+          The app doesn&rsquo;t scrape job boards (that&rsquo;s against their terms and blocked
+          anyway) — it makes <b>looking</b> and <b>capturing</b> friction-free.
+        </p>
+        <ul>
+          <li>
+            <b>Find jobs</b> (button on the pipeline) builds a search from your keywords and
+            location and opens it on Indeed, LinkedIn, Google Jobs, Glassdoor and remote boards in
+            one click. <b>Save</b> the searches you run so a weekly re-run is one tap.
+          </li>
+          <li>
+            <b>Clip bookmarklet.</b> From <a href={routes.settings()}>Settings</a>, drag{' '}
+            <b>Clip to Job Tracker</b> to your bookmarks bar. On any listing, click it and the
+            new-application form opens pre-filled with the page title, link, and any text you
+            selected — fix what the parser missed and save.
+          </li>
+          <li>
+            <b>Share from your phone.</b> Install the app (Add to Home Screen), then use a
+            listing&rsquo;s <b>Share</b> button and pick <b>Job Tracker</b> to send it straight into
+            capture. (Android; on iOS use the bookmarklet.)
+          </li>
+        </ul>
+      </Section>
+
       <Section title="Getting started & staying on track">
         <p>
           New here? The <b>Get started</b> checklist on the pipeline walks you through the whole

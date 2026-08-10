@@ -5,6 +5,26 @@ import './styles/app.css'
 import { StoreProvider } from './store/store'
 import { App } from './App'
 
+// PWA share-target (Android): the OS share sheet lands on the app with the
+// shared job as ?title=&text=&url= query params (before the hash). Fold them
+// into the #/new capture route before React reads the hash, then strip the
+// query so a refresh doesn't re-trigger it.
+;(() => {
+  try {
+    const sp = new URLSearchParams(window.location.search)
+    if (sp.has('title') || sp.has('text') || sp.has('url')) {
+      const q = new URLSearchParams()
+      for (const k of ['title', 'text', 'url']) {
+        const v = sp.get(k)
+        if (v) q.set(k, v)
+      }
+      window.history.replaceState(null, '', import.meta.env.BASE_URL + '#/new?' + q.toString())
+    }
+  } catch {
+    /* ignore */
+  }
+})()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <StoreProvider>
