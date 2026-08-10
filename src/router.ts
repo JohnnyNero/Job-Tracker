@@ -13,9 +13,10 @@ export type Route =
   | { name: 'cv' }
   | { name: 'settings' }
   | { name: 'guide' }
+  | { name: 'group' }
   | { name: 'not_found'; path: string }
 
-function parse(hash: string): Route {
+export function parse(hash: string): Route {
   // strip leading "#", tolerate "#/" and "#"
   const path = hash.replace(/^#/, '') || '/'
   const parts = path.split('/').filter(Boolean) // ["app","<id>"]
@@ -36,6 +37,8 @@ function parse(hash: string): Route {
       return { name: 'settings' }
     case 'guide':
       return { name: 'guide' }
+    case 'group':
+      return { name: 'group' }
     default:
       return { name: 'not_found', path }
   }
@@ -71,4 +74,5 @@ export const routes = {
   cv: () => '#/cv',
   settings: () => '#/settings',
   guide: () => '#/guide',
+  group: () => '#/group',
 }
