@@ -4,6 +4,9 @@ The app works fully offline today (localStorage). Follow this when you want it
 backed by Postgres and synced across machines. Nothing here is required to use
 the app.
 
+> Implementation: see `docs/superpowers/specs/2026-08-10-supabase-online-mode-design.md`
+> and `docs/superpowers/plans/2026-08-10-supabase-online-mode.md`.
+
 The order matters: **stand up the database and prove RLS works before any app
 code reads from it.** The anon key is public; RLS is the only thing between your
 data and the world.

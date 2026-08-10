@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useStore, emptyDataset } from '../store/store'
 import { serialiseDataset, normaliseDataset } from '../store/localStore'
 import { sampleDataset } from '../store/sample'
+import { isOnline, signOut } from '../store/supabaseClient'
 
 export function Settings() {
   const store = useStore()
@@ -81,6 +82,13 @@ export function Settings() {
         <h1>Settings</h1>
         <span className="saved-flash" aria-live="polite">{msg ?? ''}</span>
       </div>
+
+      {isOnline && (
+        <section>
+          <h3>Account</h3>
+          <button type="button" onClick={() => void signOut()}>Sign out</button>
+        </section>
+      )}
 
       <div className="panel">
         <h2>Your data</h2>
