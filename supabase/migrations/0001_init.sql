@@ -59,7 +59,46 @@ create table if not exists cv_versions (
   angle text,                         -- what this version leans into
   file_path text,                     -- Supabase Storage path
   is_current boolean not null default false,
+  layout jsonb,                       -- assembled CV document (CV builder)
   created_at timestamptz not null default now()
+);
+
+-- CV builder: "about you" (one row per user), work history, and education.
+-- Bullets under each experience live in cv_versions.layout, so different CV
+-- versions can emphasise different achievements from the same history.
+create table if not exists person (
+  user_id uuid primary key default auth.uid() references auth.users on delete cascade,
+  full_name text not null default '',
+  headline text,
+  email text,
+  phone text,
+  location text,
+  links text[] not null default '{}',
+  summary text,
+  skills text[] not null default '{}'
+);
+
+create table if not exists cv_experience (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  company text not null default '',
+  title text not null default '',
+  location text,
+  start text,
+  "end" text,
+  position int not null default 0
+);
+
+create table if not exists cv_education (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  institution text not null default '',
+  qualification text,
+  field text,
+  start text,
+  "end" text,
+  note text,
+  position int not null default 0
 );
 
 -- Applications
@@ -140,6 +179,9 @@ alter table capabilities        enable row level security;
 alter table role_profiles       enable row level security;
 alter table evidence            enable row level security;
 alter table cv_versions         enable row level security;
+alter table person              enable row level security;
+alter table cv_experience       enable row level security;
+alter table cv_education        enable row level security;
 alter table applications        enable row level security;
 alter table application_evidence enable row level security;
 alter table criteria            enable row level security;
@@ -162,6 +204,18 @@ create policy "own rows" on evidence
 
 drop policy if exists "own rows" on cv_versions;
 create policy "own rows" on cv_versions
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on person;
+create policy "own rows" on person
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on cv_experience;
+create policy "own rows" on cv_experience
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on cv_education;
+create policy "own rows" on cv_education
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 drop policy if exists "own rows" on applications;

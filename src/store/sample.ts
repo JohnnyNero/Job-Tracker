@@ -31,6 +31,11 @@ export function sampleDataset(): Dataset {
   const opsCv = newId()
   const dutyCv = newId()
 
+  // cv builder: work history + education
+  const expOdeon = newId()
+  const expCinema = newId()
+  const eduCollege = newId()
+
   // evidence
   const rotaEv = newId()
   const costEv = newId()
@@ -45,6 +50,17 @@ export function sampleDataset(): Dataset {
   const appClosed = newId()
 
   return {
+    person: {
+      full_name: 'Jamie Rivera',
+      headline: 'Operations Manager',
+      email: 'jamie.rivera@example.com',
+      phone: '07700 900123',
+      location: 'Leeds, UK',
+      links: ['linkedin.com/in/jamie-rivera'],
+      summary:
+        'Operations manager with seven years leading multi-site leisure teams — fair rotas, tight cost control, calm under pressure.',
+      skills: ['Rota & scheduling', 'Cost control', 'P&L ownership', 'Health & safety', 'Team leadership'],
+    },
     capabilities: [
       { id: newId(), name: 'cost control', note: 'Reducing spend without cutting service.' },
       { id: newId(), name: 'rota and scheduling', note: 'Building fair, workable staff rotas.' },
@@ -80,6 +96,21 @@ export function sampleDataset(): Dataset {
         angle: 'Leads on cost control and P&L ownership.',
         file_path: 'CV - operations manager v3.docx',
         is_current: true,
+        layout: {
+          summary:
+            'Hands-on operations manager who keeps day-to-day service running while taking cost out of the P&L. Seven years leading multi-site leisure teams.',
+          hidden_experience_ids: [],
+          hidden_education_ids: [],
+          bullets: {
+            [expOdeon]: [
+              { id: newId(), evidence_id: rotaEv, text: null },
+              { id: newId(), evidence_id: costEv, text: null },
+              { id: newId(), evidence_id: conflictEv, text: null },
+            ],
+            [expCinema]: [{ id: newId(), evidence_id: trainingEv, text: null }],
+          },
+          skills: null,
+        },
         created_at: daysAgoIso(30),
       },
       {
@@ -89,7 +120,40 @@ export function sampleDataset(): Dataset {
         angle: 'Front-of-house leadership and shift ownership.',
         file_path: 'CV - duty manager v2.docx',
         is_current: true,
+        layout: null,
         created_at: daysAgoIso(25),
+      },
+    ],
+    cv_experience: [
+      {
+        id: expOdeon,
+        company: 'Odeon',
+        title: 'Operations Manager',
+        location: 'Leeds',
+        start: '2021-03',
+        end: null,
+        position: 0,
+      },
+      {
+        id: expCinema,
+        company: 'Vue Cinemas',
+        title: 'Duty Manager',
+        location: 'Leeds',
+        start: '2018-06',
+        end: '2021-02',
+        position: 1,
+      },
+    ],
+    cv_education: [
+      {
+        id: eduCollege,
+        institution: 'Leeds City College',
+        qualification: 'BTEC Level 3',
+        field: 'Business & Management',
+        start: '2016',
+        end: '2018',
+        note: null,
+        position: 0,
       },
     ],
     evidence: [

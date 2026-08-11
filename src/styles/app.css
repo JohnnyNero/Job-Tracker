@@ -527,6 +527,253 @@ label.field > .lbl {
   gap: 6px;
   flex-wrap: wrap;
 }
+
+/* ------------------------------------------------------------ CV builder */
+.cv-build-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.cv-build-preview {
+  position: sticky;
+  top: 16px;
+}
+@media (max-width: 1080px) {
+  .cv-build-grid {
+    grid-template-columns: 1fr;
+  }
+  .cv-build-preview {
+    position: static;
+  }
+  .cv-build-grid[data-tab] .compose-pane {
+    display: none;
+  }
+  .cv-build-grid[data-tab='edit'] .cv-build-editor,
+  .cv-build-grid[data-tab='preview'] .cv-build-preview {
+    display: block;
+  }
+}
+.cv-build-editor .panel + .panel {
+  margin-top: 16px;
+}
+.cv-sheet-wrap {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+}
+
+/* The document: always light, ATS-safe (single column, real text, standard
+   headings), independent of the app's theme. */
+.cv-sheet {
+  background: #ffffff;
+  color: #14181f;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 38px 44px;
+  box-shadow: var(--shadow-1);
+  border-radius: 3px;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.cv-head h1 {
+  font-size: 23px;
+  margin: 0;
+  color: #14181f;
+  letter-spacing: -0.01em;
+}
+.cv-headline {
+  font-size: 14px;
+  color: #333a44;
+  margin: 2px 0 0;
+}
+.cv-contacts {
+  font-size: 12px;
+  color: #4a515c;
+  margin: 5px 0 0;
+}
+.cv-section {
+  margin-top: 17px;
+}
+.cv-section h2 {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid #c9ced6;
+  padding-bottom: 3px;
+  margin: 0 0 8px;
+  color: #14181f;
+}
+.cv-summary,
+.cv-skills {
+  margin: 0;
+}
+.cv-entry {
+  margin-bottom: 11px;
+}
+.cv-entry-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+.cv-entry-title {
+  font-weight: 700;
+  color: #14181f;
+}
+.cv-entry-dates {
+  color: #5a616c;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.cv-entry-sub {
+  color: #4a515c;
+  font-size: 12px;
+  font-style: italic;
+}
+.cv-bullets {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.cv-bullets li {
+  margin: 2px 0;
+}
+
+/* Editor rows */
+.cv-exp {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--surface-2);
+}
+.cv-exp.excluded {
+  opacity: 0.55;
+}
+.cv-exp-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cv-include {
+  display: flex;
+  align-items: center;
+}
+.cv-include input {
+  width: auto;
+}
+.cv-exp-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 6px;
+}
+.cv-bullets-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.cv-bullet-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.cv-bullet-main {
+  flex: 1;
+  min-width: 0;
+}
+.cv-bullet-linked {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-size: 13px;
+}
+.cv-bullet-tag {
+  display: block;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.cv-bullet-input {
+  width: 100%;
+}
+.cv-bullet-issues {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.cv-issue {
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--tone-amber-fg);
+  color: var(--tone-amber-fg);
+}
+.cv-bullet-btns {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.chip .chip-x {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  margin-left: 4px;
+  color: inherit;
+  font-size: 13px;
+  padding: 0 2px;
+  line-height: 1;
+}
+@media (max-width: 640px) {
+  .cv-exp-fields {
+    grid-template-columns: 1fr;
+  }
+  .cv-sheet {
+    padding: 22px 20px;
+  }
+}
+
+/* Print: show only the CV document, single column, page margins. */
+@media print {
+  body {
+    background: #fff;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .cv-print,
+  .cv-print * {
+    visibility: visible;
+  }
+  .cv-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .nav {
+    display: none !important;
+  }
+  .cv-section,
+  .cv-entry {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
 .t-open {
   flex: 1;
   min-width: 150px;

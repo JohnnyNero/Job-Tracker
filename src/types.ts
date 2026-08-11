@@ -71,7 +71,71 @@ export interface CvVersion {
   /** Offline: the file name or a link. Online: a Supabase Storage path. */
   file_path: string | null
   is_current: boolean
+  /** The assembled CV document for this version (null until built here). */
+  layout: CvLayout | null
   created_at: string
+}
+
+// --- CV builder ------------------------------------------------------------
+
+/** "About you" — the stable backbone of every CV. One record for the single
+ * user; skills and links are simple lists. */
+export interface Person {
+  full_name: string
+  headline: string | null
+  email: string | null
+  phone: string | null
+  location: string | null
+  links: string[]
+  /** Default professional summary; a CV version can override it. */
+  summary: string | null
+  skills: string[]
+}
+
+/** A role in your work history (shared across CV versions). Bullets live in each
+ * version's layout, so different CVs can emphasise different achievements. */
+export interface CvExperience {
+  id: string
+  company: string
+  title: string
+  location: string | null
+  /** Free-ish "YYYY-MM" or "2021"; rendered as given. */
+  start: string | null
+  /** null / '' renders as "Present". */
+  end: string | null
+  position: number
+}
+
+export interface CvEducation {
+  id: string
+  institution: string
+  qualification: string | null
+  field: string | null
+  start: string | null
+  end: string | null
+  note: string | null
+  position: number
+}
+
+/** A CV bullet: either a live link to an evidence item (uses its short bullet,
+ * so editing the evidence updates every CV) or manual free text. */
+export interface CvBullet {
+  id: string
+  evidence_id: string | null
+  text: string | null
+}
+
+/** Per-version assembly: which experiences/education to show, the bullets under
+ * each experience, an optional summary/skills override. Section order is fixed
+ * and ATS-safe (Summary → Experience → Skills → Education). */
+export interface CvLayout {
+  summary: string | null
+  hidden_experience_ids: string[]
+  hidden_education_ids: string[]
+  /** experience id → ordered bullets. */
+  bullets: Record<string, CvBullet[]>
+  /** null = use Person.skills. */
+  skills: string[] | null
 }
 
 export interface Application {
@@ -147,13 +211,31 @@ export interface InterviewQuestion {
 
 /** The entire dataset — this is exactly what export/import writes and reads. */
 export interface Dataset {
+  /** Single "about you" record for the CV builder. */
+  person: Person
   capabilities: Capability[]
   role_profiles: RoleProfile[]
   evidence: Evidence[]
   cv_versions: CvVersion[]
+  cv_experience: CvExperience[]
+  cv_education: CvEducation[]
   applications: Application[]
   events: AppEvent[]
   application_evidence: ApplicationEvidence[]
   criteria: Criterion[]
   interview_questions: InterviewQuestion[]
+}
+
+/** A fresh, empty "about you" record. */
+export function emptyPerson(): Person {
+  return {
+    full_name: '',
+    headline: null,
+    email: null,
+    phone: null,
+    location: null,
+    links: [],
+    summary: null,
+    skills: [],
+  }
 }

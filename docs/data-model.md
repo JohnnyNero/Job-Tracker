@@ -29,8 +29,15 @@ There are deliberately **no per-sector copies** of an evidence item.
   array of capability *names*.
 - **evidence** — the bank. `bullet` (CV length) + `full_text` (answer length),
   `capabilities[]`, `use_count`, `last_used_at`.
-- **cv_versions** — finished files actually sent. Roughly one base CV per
-  profile. `file_path` is a name/link offline, a Storage path online.
+- **cv_versions** — one per CV you maintain. `file_path` is a name/link offline,
+  a Storage path online; `layout` (jsonb) holds the assembled CV document for the
+  builder (which experiences/education show, and the bullets under each — a live
+  link to an evidence item or manual text).
+- **person** — single "about you" record for the CV builder: name, contact,
+  links, default summary, skills. One row per user.
+- **cv_experience / cv_education** — global work history / qualifications;
+  bullets live in `cv_versions.layout`, so different versions emphasise different
+  achievements from the same history.
 - **applications** — the core record. Stage, outcome, the archived `ad_text`,
   `told_them` (what you committed to on a call), and `next_action_at` (the
   follow-up nudge / snooze that drives the "Needs you" triage queue; auto-set to

@@ -179,6 +179,37 @@ export function Guide() {
         </p>
       </Section>
 
+      <Section title="Build your CV">
+        <p>
+          The <a href={routes.cv()}>CV locker</a> doesn&rsquo;t just track files — it{' '}
+          <b>builds the CV</b>. Each version has a <b>Build / Edit CV</b> button that opens a
+          block-based composer: a <b>&ldquo;About you&rdquo;</b> record (name, contact, skills), your
+          work history, and <b>bullets pulled straight from the evidence bank</b>. Edit an
+          achievement once and every CV that uses it updates.
+        </p>
+        <ul>
+          <li>
+            <b>Assemble from lego blocks.</b> Add roles, then drop in evidence bullets (or type
+            manual ones), reorder them, and toggle which roles show on this version.
+          </li>
+          <li>
+            <b>Tailor to an application.</b> Pick a job and the builder shows how many of its
+            essential keywords your CV covers, then lets you pull in the achievements that cover its
+            criteria in one click.
+          </li>
+          <li>
+            <b>Smart checks, no AI.</b> Bullets are flagged for weak openers, missing numbers, or
+            over-length — instant, private, nothing leaves your device.
+          </li>
+          <li>
+            <b>Export.</b> <b>Print / PDF</b> produces a single-column, ATS-readable document
+            (real selectable text, standard headings) — plus <b>Markdown</b> and <b>JSON Resume</b>{' '}
+            for portability. For the cleanest PDF, set the print margins to Default and turn headers
+            &amp; footers off.
+          </li>
+        </ul>
+      </Section>
+
       <Section title="Role profiles & coverage">
         <p>
           A profile is how you <b>frame</b> yourself for a kind of role — positioning, the

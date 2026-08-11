@@ -39,14 +39,23 @@ export function CvLocker() {
       </div>
 
       <div className="banner">
-        Offline mode stores the <strong>file name or a link</strong>, not the file itself. Actual
-        file upload arrives when you connect Supabase Storage &mdash; the field is ready for it.
+        <strong>Build a CV here</strong> from your evidence bank, or just track the files you send.
+        Each version has a <strong>Build / Edit CV</strong> button — assemble it from lego blocks and
+        export an ATS-clean PDF. You can still record an external file name or link below.
       </div>
 
       {cvs.length === 0 ? (
-        <EmptyState title="No CV versions yet">
-          Add the CVs you send out, one base version per role profile. Tracking which file went to
-          which application is the whole point &mdash; so when one lands, you know which CV did it.
+        <EmptyState
+          title="No CV versions yet"
+          action={
+            <button className="btn primary" onClick={() => store.addCvVersion('cv-v1')}>
+              Start a CV
+            </button>
+          }
+        >
+          Add a CV version, then <strong>build it</strong> from your evidence bank — one base per
+          role profile. Tracking which version went to which application means that when one lands,
+          you know which CV did it.
         </EmptyState>
       ) : (
         <div className="card-list">
@@ -89,11 +98,16 @@ function CvCard({ cv }: { cv: CvVersion }) {
       <div className="row" style={{ marginBottom: 10 }}>
         <h3 style={{ margin: 0 }}>{cv.label || 'Untitled'}</h3>
         {cv.is_current && <span className="chip on">current</span>}
+        {cv.layout && <span className="chip" title="Built in the CV builder">built</span>}
         <span className="spacer" style={{ flex: 1 }} />
         <button className="btn ghost small" onClick={del} aria-label="Delete CV">
           ×
         </button>
       </div>
+
+      <a className="btn primary" style={{ marginBottom: 12 }} href={routes.cvBuild(cv.id)}>
+        {cv.layout ? 'Edit CV' : 'Build this CV'}
+      </a>
 
       <TextField label="Label" value={cv.label} onCommit={(v) => store.updateCvVersion(cv.id, { label: v })} />
       <SelectField

@@ -81,6 +81,17 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   a bootstrap in `main.tsx` before React reads the hash). Saved searches live in
   `prefs`.
 
+- **CV builder.** `#/cv/:id` (`CvBuilder.tsx` + `CvPreview.tsx`) assembles a CV
+  version from a single **`person`** record, global **`cv_experience`** /
+  **`cv_education`** rows, and per-version **`cv_versions.layout`** (which
+  experiences/education show, and the bullets under each — either live-linked to
+  an evidence item or manual). `src/lib/cv.ts` turns that into a rendered doc +
+  Markdown + **JSON Resume** (MIT schema, portable). Export is **browser
+  print-to-PDF** via the `@media print` block (single-column selectable text =
+  ATS-safe) — no PDF library. `src/lib/cvChecks.ts` is the no-AI writing help
+  (weak-verb / missing-number / length flags + local keyword coverage vs a job's
+  criteria). The `.cv-sheet` is always light (a document), independent of theme.
+
 Full detail: `docs/architecture.md`. Data model: `docs/data-model.md`.
 Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.
 

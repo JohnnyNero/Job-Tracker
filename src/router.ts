@@ -21,6 +21,7 @@ export type Route =
   | { name: 'evidence' }
   | { name: 'profiles' }
   | { name: 'cv' }
+  | { name: 'cvbuild'; id: string }
   | { name: 'settings' }
   | { name: 'guide' }
   | { name: 'not_found'; path: string }
@@ -53,7 +54,7 @@ function parse(hash: string): Route {
     case 'profiles':
       return { name: 'profiles' }
     case 'cv':
-      return { name: 'cv' }
+      return parts[1] ? { name: 'cvbuild', id: parts[1] } : { name: 'cv' }
     case 'settings':
       return { name: 'settings' }
     case 'guide':
@@ -93,6 +94,7 @@ export const routes = {
   evidence: () => '#/evidence',
   profiles: () => '#/profiles',
   cv: () => '#/cv',
+  cvBuild: (id: string) => `#/cv/${id}`,
   settings: () => '#/settings',
   guide: () => '#/guide',
 }

@@ -3,14 +3,19 @@ import type {
   ApplicationEvidence,
   Capability,
   Criterion,
+  CvBullet,
+  CvEducation,
+  CvExperience,
+  CvLayout,
   CvVersion,
   Dataset,
   AppEvent,
   Evidence,
   InterviewQuestion,
+  Person,
   RoleProfile,
 } from '../types'
-import { STAGES, OUTCOMES } from '../types'
+import { STAGES, OUTCOMES, emptyPerson } from '../types'
 import { nowIso } from '../lib/id'
 
 // Offline persistence. The entire dataset lives under one localStorage key as
@@ -28,10 +33,13 @@ const EXPORT_KEY = STORAGE_KEY + ':last-export'
 
 export function emptyDataset(): Dataset {
   return {
+    person: emptyPerson(),
     capabilities: [],
     role_profiles: [],
     evidence: [],
     cv_versions: [],
+    cv_experience: [],
+    cv_education: [],
     applications: [],
     events: [],
     application_evidence: [],
@@ -51,6 +59,41 @@ const bool = (v: unknown, d = false): boolean => (typeof v === 'boolean' ? v : d
 const num = (v: unknown, d = 0): number => (typeof v === 'number' && isFinite(v) ? v : d)
 const strArr = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+
+function normPerson(v: unknown): Person {
+  if (!v || typeof v !== 'object') return emptyPerson()
+  const o = v as Row
+  return {
+    full_name: str(o.full_name),
+    headline: strOrNull(o.headline),
+    email: strOrNull(o.email),
+    phone: strOrNull(o.phone),
+    location: strOrNull(o.location),
+    links: strArr(o.links),
+    summary: strOrNull(o.summary),
+    skills: strArr(o.skills),
+  }
+}
+
+/** Coerce a CV version's layout blob into shape (FK cleanup happens later). */
+function normLayout(v: unknown): CvLayout | null {
+  if (!v || typeof v !== 'object') return null
+  const o = v as Row
+  const rawBullets = o.bullets && typeof o.bullets === 'object' ? (o.bullets as Record<string, unknown>) : {}
+  const bullets: Record<string, CvBullet[]> = {}
+  for (const k of Object.keys(rawBullets)) {
+    bullets[k] = asRows(rawBullets[k])
+      .filter((b) => idOrNull(b.id))
+      .map((b) => ({ id: str(b.id), evidence_id: idOrNull(b.evidence_id), text: strOrNull(b.text) }))
+  }
+  return {
+    summary: strOrNull(o.summary),
+    hidden_experience_ids: strArr(o.hidden_experience_ids),
+    hidden_education_ids: strArr(o.hidden_education_ids),
+    bullets,
+    skills: Array.isArray(o.skills) ? strArr(o.skills) : null,
+  }
+}
 
 /**
  * Coerce an unknown parsed blob into a Dataset. Missing top-level keys, missing
@@ -101,7 +144,33 @@ export function normaliseDataset(raw: unknown): Dataset {
       angle: strOrNull(x.angle),
       file_path: strOrNull(x.file_path),
       is_current: bool(x.is_current),
+      layout: normLayout(x.layout),
       created_at: str(x.created_at, now),
+    }))
+
+  const cv_experience: CvExperience[] = asRows(r.cv_experience)
+    .filter((x) => idOrNull(x.id))
+    .map((x) => ({
+      id: str(x.id),
+      company: str(x.company),
+      title: str(x.title),
+      location: strOrNull(x.location),
+      start: strOrNull(x.start),
+      end: strOrNull(x.end),
+      position: num(x.position),
+    }))
+
+  const cv_education: CvEducation[] = asRows(r.cv_education)
+    .filter((x) => idOrNull(x.id))
+    .map((x) => ({
+      id: str(x.id),
+      institution: str(x.institution),
+      qualification: strOrNull(x.qualification),
+      field: strOrNull(x.field),
+      start: strOrNull(x.start),
+      end: strOrNull(x.end),
+      note: strOrNull(x.note),
+      position: num(x.position),
     }))
 
   const applications: Application[] = asRows(r.applications)
@@ -173,13 +242,40 @@ export function normaliseDataset(raw: unknown): Dataset {
   const evIds = new Set(evidence.map((e) => e.id))
   const profIds = new Set(role_profiles.map((p) => p.id))
   const cvIds = new Set(cv_versions.map((c) => c.id))
+  const expIds = new Set(cv_experience.map((e) => e.id))
+  const eduIds = new Set(cv_education.map((e) => e.id))
   const nullMissing = (v: string | null, set: Set<string>) => (v && set.has(v) ? v : null)
 
+  // A CV layout can reference deleted experiences/evidence — drop those so the
+  // builder never renders a dangling bullet.
+  const cleanLayout = (l: CvLayout): CvLayout => {
+    const bullets: Record<string, CvBullet[]> = {}
+    for (const k of Object.keys(l.bullets)) {
+      if (!expIds.has(k)) continue
+      bullets[k] = l.bullets[k].filter((b) =>
+        b.evidence_id ? evIds.has(b.evidence_id) : !!(b.text && b.text.trim()),
+      )
+    }
+    return {
+      ...l,
+      bullets,
+      hidden_experience_ids: l.hidden_experience_ids.filter((id) => expIds.has(id)),
+      hidden_education_ids: l.hidden_education_ids.filter((id) => eduIds.has(id)),
+    }
+  }
+
   return {
+    person: normPerson(r.person),
     capabilities,
     role_profiles,
     evidence,
-    cv_versions: cv_versions.map((c) => ({ ...c, profile_id: nullMissing(c.profile_id, profIds) })),
+    cv_experience,
+    cv_education,
+    cv_versions: cv_versions.map((c) => ({
+      ...c,
+      profile_id: nullMissing(c.profile_id, profIds),
+      layout: c.layout ? cleanLayout(c.layout) : null,
+    })),
     applications: applications.map((a) => ({
       ...a,
       profile_id: nullMissing(a.profile_id, profIds),

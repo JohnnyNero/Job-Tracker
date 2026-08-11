@@ -4,10 +4,14 @@ import type {
   AppEvent,
   Application,
   Capability,
+  CvEducation,
+  CvExperience,
+  CvLayout,
   CvVersion,
   Dataset,
   Evidence,
   Outcome,
+  Person,
   RoleProfile,
   Stage,
 } from '../types'
@@ -104,6 +108,18 @@ interface StoreValue {
   addCvVersion: (label: string) => CvVersion
   updateCvVersion: (id: string, patch: Partial<Omit<CvVersion, 'id' | 'created_at'>>) => void
   deleteCvVersion: (id: string) => void
+
+  // cv builder
+  updatePerson: (patch: Partial<Person>) => void
+  updateCvLayout: (versionId: string, patch: Partial<CvLayout>) => void
+  addExperience: () => CvExperience
+  updateExperience: (id: string, patch: Partial<Omit<CvExperience, 'id'>>) => void
+  deleteExperience: (id: string) => void
+  moveExperience: (id: string, dir: -1 | 1) => void
+  addEducation: () => CvEducation
+  updateEducation: (id: string, patch: Partial<Omit<CvEducation, 'id'>>) => void
+  deleteEducation: (id: string) => void
+  moveEducation: (id: string, dir: -1 | 1) => void
 
   // composer
   recordEvidenceUse: (applicationId: string, evidenceIds: string[]) => void
@@ -239,6 +255,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addCvVersion: (label) => runCreate((d) => m.addCvVersion(d, label)),
     updateCvVersion: (id, patch) => run((d) => m.updateCvVersion(d, id, patch)),
     deleteCvVersion: (id) => run((d) => m.deleteCvVersion(d, id)),
+
+    updatePerson: (patch) => run((d) => m.updatePerson(d, patch)),
+    updateCvLayout: (versionId, patch) => run((d) => m.updateCvLayout(d, versionId, patch)),
+    addExperience: () => runCreate((d) => m.addExperience(d)),
+    updateExperience: (id, patch) => run((d) => m.updateExperience(d, id, patch)),
+    deleteExperience: (id) => run((d) => m.deleteExperience(d, id)),
+    moveExperience: (id, dir) => run((d) => m.moveExperience(d, id, dir)),
+    addEducation: () => runCreate((d) => m.addEducation(d)),
+    updateEducation: (id, patch) => run((d) => m.updateEducation(d, id, patch)),
+    deleteEducation: (id) => run((d) => m.deleteEducation(d, id)),
+    moveEducation: (id, dir) => run((d) => m.moveEducation(d, id, dir)),
 
     recordEvidenceUse: (applicationId, evidenceIds) =>
       run((d) => m.recordEvidenceUse(d, applicationId, evidenceIds)),

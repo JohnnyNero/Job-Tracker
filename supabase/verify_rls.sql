@@ -10,11 +10,12 @@ select relname as table, relrowsecurity as rls_enabled
 from pg_class
 where relname in (
   'capabilities','role_profiles','evidence','cv_versions',
+  'person','cv_experience','cv_education',
   'applications','application_evidence','criteria','interview_questions','events'
 )
 order by relname;
 
--- 2) Every table must have the "own rows" policy. Expect 9 rows.
+-- 2) Every table must have the "own rows" policy. Expect 12 rows.
 select tablename, policyname, cmd
 from pg_policies
 where schemaname = 'public'

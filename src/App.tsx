@@ -15,6 +15,7 @@ import { InterviewPrep } from './components/InterviewPrep'
 import { Evidence } from './components/Evidence'
 import { Profiles } from './components/Profiles'
 import { CvLocker } from './components/CvLocker'
+import { CvBuilder } from './components/CvBuilder'
 import { Settings } from './components/Settings'
 import { Guide } from './components/Guide'
 import { FindJobs } from './components/FindJobs'
@@ -38,6 +39,7 @@ export function App() {
         {route.name === 'evidence' && <Evidence />}
         {route.name === 'profiles' && <Profiles />}
         {route.name === 'cv' && <CvLocker />}
+        {route.name === 'cvbuild' && <CvBuilder id={route.id} />}
         {route.name === 'settings' && <Settings />}
         {route.name === 'guide' && <Guide />}
         {route.name === 'not_found' && <NotFound path={route.path} />}
@@ -69,7 +71,7 @@ function Nav({ routeName }: { routeName: string }) {
       {tab(routes.pipeline(), 'Pipeline', 'Pipeline', <PipelineIcon />, routeName === 'pipeline' || routeName === 'new' || routeName === 'find' || routeName === 'application' || routeName === 'compose' || routeName === 'prep')}
       {tab(routes.evidence(), 'Evidence', 'Evidence', <EvidenceIcon />, routeName === 'evidence')}
       {tab(routes.profiles(), 'Role profiles', 'Profiles', <ProfilesIcon />, routeName === 'profiles')}
-      {tab(routes.cv(), 'CV locker', 'CV', <CvIcon />, routeName === 'cv')}
+      {tab(routes.cv(), 'CV locker', 'CV', <CvIcon />, routeName === 'cv' || routeName === 'cvbuild')}
       {tab(routes.settings(), 'Settings', 'Settings', <SettingsIcon />, routeName === 'settings')}
       <span className="spacer" />
       {tab(routes.guide(), 'Guide', 'Guide', <GuideIcon />, routeName === 'guide')}

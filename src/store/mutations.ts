@@ -3,11 +3,15 @@ import type {
   Application,
   Capability,
   Criterion,
+  CvEducation,
+  CvExperience,
+  CvLayout,
   CvVersion,
   Dataset,
   Evidence,
   InterviewQuestion,
   Outcome,
+  Person,
   RoleProfile,
   Stage,
 } from '../types'
@@ -388,6 +392,7 @@ export function addCvVersion(data: Dataset, label: string): [Dataset, CvVersion]
     angle: null,
     file_path: null,
     is_current: false,
+    layout: null,
     created_at: nowIso(),
   }
   return [{ ...data, cv_versions: [...data.cv_versions, cv] }, cv]
@@ -411,6 +416,132 @@ export function deleteCvVersion(data: Dataset, id: string): Dataset {
       a.cv_version_id === id ? { ...a, cv_version_id: null } : a,
     ),
   }
+}
+
+// ---------------------------------------------------------------------------
+// CV builder — person, experience, education, per-version layout
+// ---------------------------------------------------------------------------
+
+export function updatePerson(data: Dataset, patch: Partial<Person>): Dataset {
+  return { ...data, person: { ...data.person, ...patch } }
+}
+
+const DEFAULT_LAYOUT: CvLayout = {
+  summary: null,
+  hidden_experience_ids: [],
+  hidden_education_ids: [],
+  bullets: {},
+  skills: null,
+}
+
+/** Merge a patch into a CV version's layout, creating a default one if none. */
+export function updateCvLayout(data: Dataset, versionId: string, patch: Partial<CvLayout>): Dataset {
+  const cv = data.cv_versions.find((c) => c.id === versionId)
+  if (!cv) return data
+  const layout: CvLayout = { ...DEFAULT_LAYOUT, ...(cv.layout ?? {}), ...patch }
+  return { ...data, cv_versions: replace(data.cv_versions, { ...cv, layout }) }
+}
+
+function expSorted(data: Dataset): CvExperience[] {
+  return [...data.cv_experience].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))
+}
+function eduSorted(data: Dataset): CvEducation[] {
+  return [...data.cv_education].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))
+}
+
+export function addExperience(data: Dataset): [Dataset, CvExperience] {
+  const position = data.cv_experience.length
+    ? Math.max(...data.cv_experience.map((e) => e.position)) + 1
+    : 0
+  const exp: CvExperience = {
+    id: newId(),
+    company: '',
+    title: '',
+    location: null,
+    start: null,
+    end: null,
+    position,
+  }
+  return [{ ...data, cv_experience: [...data.cv_experience, exp] }, exp]
+}
+
+export function updateExperience(
+  data: Dataset,
+  id: string,
+  patch: Partial<Omit<CvExperience, 'id'>>,
+): Dataset {
+  const existing = data.cv_experience.find((e) => e.id === id)
+  if (!existing) return data
+  return { ...data, cv_experience: replace(data.cv_experience, { ...existing, ...patch }) }
+}
+
+export function deleteExperience(data: Dataset, id: string): Dataset {
+  // Also strip this experience's bullets / hidden-ref from every version layout.
+  const cv_versions = data.cv_versions.map((c) => {
+    if (!c.layout) return c
+    if (!(id in c.layout.bullets) && !c.layout.hidden_experience_ids.includes(id)) return c
+    const bullets = { ...c.layout.bullets }
+    delete bullets[id]
+    return {
+      ...c,
+      layout: {
+        ...c.layout,
+        bullets,
+        hidden_experience_ids: c.layout.hidden_experience_ids.filter((x) => x !== id),
+      },
+    }
+  })
+  return { ...data, cv_experience: data.cv_experience.filter((e) => e.id !== id), cv_versions }
+}
+
+export function moveExperience(data: Dataset, id: string, dir: -1 | 1): Dataset {
+  const reordered = reorderCompact(expSorted(data), id, dir)
+  if (!reordered) return data
+  const byId = new Map(reordered.map((e) => [e.id, e]))
+  return { ...data, cv_experience: data.cv_experience.map((e) => byId.get(e.id) ?? e) }
+}
+
+export function addEducation(data: Dataset): [Dataset, CvEducation] {
+  const position = data.cv_education.length
+    ? Math.max(...data.cv_education.map((e) => e.position)) + 1
+    : 0
+  const edu: CvEducation = {
+    id: newId(),
+    institution: '',
+    qualification: null,
+    field: null,
+    start: null,
+    end: null,
+    note: null,
+    position,
+  }
+  return [{ ...data, cv_education: [...data.cv_education, edu] }, edu]
+}
+
+export function updateEducation(
+  data: Dataset,
+  id: string,
+  patch: Partial<Omit<CvEducation, 'id'>>,
+): Dataset {
+  const existing = data.cv_education.find((e) => e.id === id)
+  if (!existing) return data
+  return { ...data, cv_education: replace(data.cv_education, { ...existing, ...patch }) }
+}
+
+export function deleteEducation(data: Dataset, id: string): Dataset {
+  const cv_versions = data.cv_versions.map((c) =>
+    c.layout
+      ? { ...c, layout: { ...c.layout, hidden_education_ids: c.layout.hidden_education_ids.filter((x) => x !== id) } }
+      : c,
+  )
+  return { ...data, cv_education: data.cv_education.filter((e) => e.id !== id), cv_versions }
+}
+
+export function moveEducation(data: Dataset, id: string, dir: -1 | 1): Dataset {
+  const reordered = reorderCompact(eduSorted(data), id, dir)
+  if (!reordered) return data
+  const byId = new Map(reordered.map((e) => [e.id, e]))
+  return { ...data, cv_education: data.cv_education.map((e) => byId.get(e.id) ?? e) }
 }
 
 // ---------------------------------------------------------------------------
