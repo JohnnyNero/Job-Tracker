@@ -621,6 +621,14 @@ function EducationCard({ edu, layout, patchLayout, first, last }: { edu: CvEduca
         <input aria-label="Start" placeholder="Start" defaultValue={edu.start ?? ''} onBlur={(e) => e.target.value !== (edu.start ?? '') && store.updateEducation(edu.id, { start: e.target.value || null })} />
         <input aria-label="End" placeholder="End" defaultValue={edu.end ?? ''} onBlur={(e) => e.target.value !== (edu.end ?? '') && store.updateEducation(edu.id, { end: e.target.value || null })} />
       </div>
+      <textarea
+        className="cv-edu-note-input"
+        aria-label="Extra info"
+        rows={2}
+        placeholder="Extra info — dissertation, modules, honours, grade…"
+        defaultValue={edu.note ?? ''}
+        onBlur={(e) => e.target.value !== (edu.note ?? '') && store.updateEducation(edu.id, { note: e.target.value || null })}
+      />
     </div>
   )
 }

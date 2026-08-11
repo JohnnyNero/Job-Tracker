@@ -17,6 +17,8 @@ export interface RenderedEducation {
   institution: string
   line: string | null
   dates: string
+  /** Extra free-text under the entry — dissertation, modules, honours. */
+  note: string | null
 }
 export interface RenderedCv {
   name: string
@@ -104,6 +106,7 @@ export function assembleCv(data: Dataset, versionId: string): RenderedCv | null 
       institution: e.institution,
       line: [e.qualification, e.field].filter(Boolean).join(', ') || null,
       dates: dateRange(e.start, e.end),
+      note: (e.note && e.note.trim()) || null,
     }))
 
   return {
@@ -136,6 +139,7 @@ export function cvToMarkdown(cv: RenderedCv): string {
     out.push('', '## Education')
     for (const e of cv.education) {
       out.push(`- **${e.institution}**${e.line ? ` — ${e.line}` : ''}${e.dates ? ` (${e.dates})` : ''}`)
+      if (e.note) out.push(`  ${e.note}`)
     }
   }
   return out.join('\n')
@@ -162,6 +166,9 @@ export function cvToJsonResume(cv: RenderedCv): unknown {
     education: cv.education.map((e) => ({
       institution: e.institution,
       studyType: e.line ?? undefined,
+      // JSON Resume has no free-text note; carry it as a single "course" so the
+      // dissertation/honours line survives a round-trip.
+      courses: e.note ? [e.note] : undefined,
     })),
     skills: cv.skills.map((s) => ({ name: s })),
   }

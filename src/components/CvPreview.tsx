@@ -62,6 +62,7 @@ export function CvPreview({ cv, printable = false, template }: { cv: RenderedCv;
                 {e.dates && <span className="cv-entry-dates">{e.dates}</span>}
               </div>
               {e.line && <div className="cv-entry-sub">{e.line}</div>}
+              {e.note && <div className="cv-edu-note">{e.note}</div>}
             </div>
           ))}
         </section>

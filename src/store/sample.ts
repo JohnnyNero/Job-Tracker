@@ -152,7 +152,7 @@ export function sampleDataset(): Dataset {
         field: 'Business & Management',
         start: '2016',
         end: '2018',
-        note: null,
+        note: 'Final project: a staffing-cost model for a 40-cover café, graded Distinction.',
         position: 0,
       },
     ],

@@ -674,6 +674,13 @@ label.field > .lbl {
 .cv-bullets li {
   margin: 2px 0;
 }
+/* Extra free-text under an education entry (dissertation, modules, honours). */
+.cv-edu-note {
+  margin-top: 2px;
+  font-size: 9.5pt;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
 
 /* CV templates — CSS-only looks over the same DOM, from ATS-safe résumé-design
    guidance (Harvard/Yale career offices). All single-column, system fonts, real
@@ -865,6 +872,11 @@ label.field > .lbl {
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-top: 6px;
+}
+.cv-edu-note-input {
+  width: 100%;
+  margin-top: 6px;
+  resize: vertical;
 }
 .cv-bullets-edit {
   display: flex;
