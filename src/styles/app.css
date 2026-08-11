@@ -740,13 +740,31 @@ label.field > .lbl {
   }
 }
 
-/* Print: show only the CV document, single column, page margins. */
+/* Print: show only the CV document, single column, page margins. The document
+   must render even when the builder is in its tabbed (narrow) layout on the
+   Edit tab — otherwise the preview pane is display:none and the page prints
+   blank. So force the preview pane visible, hide the editor, and drop the
+   preview's scroll box so a long CV isn't clipped. */
 @media print {
   body {
     background: #fff;
   }
   body * {
     visibility: hidden;
+  }
+  .cv-build-grid,
+  .cv-build-grid .cv-build-preview {
+    display: block !important;
+  }
+  .cv-build-grid .cv-build-editor {
+    display: none !important;
+  }
+  .cv-sheet-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: #fff !important;
   }
   .cv-print,
   .cv-print * {
