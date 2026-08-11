@@ -3,6 +3,7 @@ import { useStore, emptyDataset } from '../store/store'
 import { normaliseDataset } from '../store/localStore'
 import { sampleDataset } from '../store/sample'
 import { routes } from '../router'
+import { SyncPanel } from './SyncPanel'
 
 // The clip bookmarklet: runs on any job page and hands the URL + title +
 // selection to the #/new capture route. Built against wherever the app is
@@ -100,9 +101,9 @@ export function Settings() {
           profiles · {counts.cvs} CV versions
         </p>
         <p className="section-note">
-          Everything lives in this browser&rsquo;s local storage right now. Export regularly &mdash;
-          it&rsquo;s your only backup until Supabase is connected, and it means you&rsquo;re never
-          hostage to a single machine.
+          {store.sync.status === 'synced' || store.sync.status === 'syncing'
+            ? 'Synced to your account and mirrored here for offline use. An occasional export is still a good idea.'
+            : 'Everything lives in this browser’s local storage. Export regularly — it’s your only backup until you turn on sync below, and it means you’re never hostage to a single machine.'}
         </p>
       </div>
 
@@ -193,19 +194,7 @@ export function Settings() {
         )}
       </div>
 
-      <div className="panel">
-        <h2>Going online with Supabase</h2>
-        <p className="muted" style={{ marginBottom: 8 }}>
-          The app runs fully offline today. When you&rsquo;re ready to sync across devices and back
-          up to Postgres, follow <code>docs/setup-supabase.md</code>: create a project, run the SQL
-          in <code>supabase/migrations/</code>, verify RLS with a signed-out client, then add the
-          two repo secrets. Your exported JSON seeds the new database.
-        </p>
-        <p className="section-note">
-          Only the public URL and anon key ever ship in the build. The service-role key never goes
-          in this repo or in CI.
-        </p>
-      </div>
+      <SyncPanel />
     </div>
   )
 }

@@ -9,7 +9,7 @@
      cached copy instantly, refresh it in the background. New deploys ship new
      hashed filenames, so they're fetched fresh on first online load.
    Bump CACHE to force old caches out on the next activation. */
-const CACHE = 'job-tracker-v1'
+const CACHE = 'job-tracker-v2'
 const BASE = new URL(self.registration.scope).pathname // e.g. /Job-Tracker/
 const SHELL = [
   BASE,

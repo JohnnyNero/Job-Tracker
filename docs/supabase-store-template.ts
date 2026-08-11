@@ -1,7 +1,12 @@
 // TEMPLATE — not compiled (lives under docs/, outside the src/ tsconfig).
 //
-// This is the drop-in for going online. The offline app already routes every
-// read and write through the store in src/store/store.tsx, so the migration is:
+// NOTE: cross-device sync is now SHIPPED, but as a whole-dataset blob (see
+// src/lib/supabase.ts + src/lib/merge.ts + supabase/migrations/0002_sync.sql and
+// docs/setup-supabase.md), not the per-table relational approach sketched below.
+// This file is kept only as a reference for a future full relational migration.
+//
+// This was the drop-in sketch for going online relationally. The offline app
+// routes every read and write through the store in src/store/store.tsx, so it'd be:
 //
 //   1. npm install @supabase/supabase-js
 //   2. Copy this file to src/store/supabaseClient.ts (+ a SupabaseStore).

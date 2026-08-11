@@ -9,12 +9,15 @@ not multi-tenant. One user. Optimised for *still being used in six weeks* — th
 failure mode is the board going stale because updating it is a chore, so every
 frequent action is fast and keyboard-driven.
 
-**Currently offline-first:** the app runs entirely on `localStorage`. A Supabase
-(Postgres) backend is fully specced and ready to wire but intentionally not
-connected yet. Don't add Supabase calls to screens — go through the store.
+**Offline-first, optionally synced:** the app always runs on `localStorage` and
+works fully offline. When the build carries Supabase env vars AND the user signs
+in (magic link), a **background sync layer** mirrors the whole `Dataset` to the
+cloud so a phone and laptop share one board (see "Cloud sync" below). Screens
+never call Supabase — everything, sync included, goes through the store.
 
-Stack: **React 18 + Vite + TypeScript**, minimal dependencies (React + react-dom
-only at runtime). Hash router, hand-written CSS with light/dark tokens.
+Stack: **React 18 + Vite + TypeScript**. Runtime deps are React + react-dom, plus
+**`@supabase/supabase-js`** (only exercised when sync is configured + signed in).
+Hash router, hand-written CSS with light/dark tokens.
 
 ## Commands
 
@@ -58,6 +61,20 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   storage go through `todayIsoDate`/`addDaysIso` in `src/lib/dates.ts`, which
   build a **local** `YYYY-MM-DD` — never `toISOString()`, which shifts the day
   for non-UTC users.
+- **Cloud sync (optional, background).** `src/lib/supabase.ts` is the only seam
+  that touches Supabase — a null client (and no-op exports) unless BOTH env vars
+  are set. Sync mirrors the **whole `Dataset` as one JSON blob** to a per-user
+  `user_state` row (`supabase/migrations/0002_sync.sql`, RLS `own rows`), NOT the
+  relational tables in `0001_init.sql` (those stay for a possible future full
+  migration). The store (`store.tsx`) drives it: on sign-in it pulls + runs
+  `mergeDatasets` (`src/lib/merge.ts` — a **union by id**, newer-`updated_at`
+  wins, so an add on one device is never lost on the other), debounce-pushes
+  local changes, and live-subscribes so the other device's pushes merge in.
+  Loop-safety rests on `sig()` (a normalised-dataset signature): a push records
+  the server signature, and an incoming realtime row equal to it is ignored as
+  our own echo. `mergeDatasets` is order-stable + idempotent, so devices
+  converge without ping-pong. Setup: `docs/setup-supabase.md`. UI: `SyncPanel.tsx`
+  in Settings; state via `useStore().sync`.
 - **Guidance layer (getting-going + staying on track).** `src/lib/coach.ts`
   derives the weekly-applied ring, pipeline-health, and the "Move things forward"
   suggestions (interviews to prep, uncovered essential criteria, thin pipeline)

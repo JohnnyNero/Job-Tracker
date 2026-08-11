@@ -1,102 +1,112 @@
-# Going online with Supabase
+# Turning on cross-device sync
 
-The app works fully offline today (localStorage). Follow this when you want it
-backed by Postgres and synced across machines. Nothing here is required to use
-the app.
+The app works fully offline (localStorage). Cross-device sync is **already built
+in** — it just needs a free Supabase project and two public keys. Once those are
+set, you sign in with an email magic link in **Settings → Sync across devices**,
+and your board follows you between phone and laptop automatically.
 
-The order matters: **stand up the database and prove RLS works before any app
-code reads from it.** The anon key is public; RLS is the only thing between your
-data and the world.
+The order matters: **stand up the database and prove RLS works before the app
+talks to it.** The anon key is public; RLS is the only thing between your data
+and the world.
+
+## What sync actually does
+
+Your whole dataset already lives as one JSON blob (the same shape as the
+Settings JSON export). Sync mirrors that blob to **one row per user** in a
+`user_state` table (see [`../supabase/migrations/0002_sync.sql`](../supabase/migrations/0002_sync.sql)),
+guarded by RLS so only you can read it. On each device the app keeps working on
+its instant local copy and, in the background, **pushes** changes up (debounced)
+and **pulls + merges** changes down (live, via realtime). The merge is a union
+by row id — so *an add on one device is never lost on the other* — with the
+newer copy winning when the same record was edited in two places. It stays fully
+offline-capable; sync is a background layer on top.
+
+> This is deliberately simpler than mirroring all twelve relational tables. For
+> one person moving between devices it's the safer trade. The relational schema
+> in `0001_init.sql` remains for a possible future full migration and is **not
+> required** for sync.
 
 ## 1. Create the project
 
-1. Sign up at [supabase.com](https://supabase.com) and create a project (the
-   free tier is fine). Pick a region near you.
-2. Note two values from **Project Settings → API**:
+1. Sign up at [supabase.com](https://supabase.com) and create a project (free
+   tier is fine). Pick a region near you.
+2. From **Project Settings → API**, note two values:
    - **Project URL** → `VITE_SUPABASE_URL`
    - **anon public** key → `VITE_SUPABASE_ANON_KEY`
 
    Both are safe to expose. The **`service_role`** key on the same page is not —
-   never put it in this repo, a committed `.env`, or a GitHub Actions step.
+   never put it in this repo, a committed `.env`, or a CI step.
 
-## 2. Run the schema
+## 2. Run the sync schema
 
-Open **SQL Editor** in the dashboard, paste the contents of
-[`../supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql),
-and run it. This creates every table, enables RLS with an `own rows` policy on
-each, and installs the triggers (updated_at, automatic stage events,
-`closed_from_stage` on close).
+Open **SQL Editor**, paste the contents of
+[`../supabase/migrations/0002_sync.sql`](../supabase/migrations/0002_sync.sql),
+and run it. This creates the `user_state` table, enables RLS with an `own rows`
+policy, installs a trigger that stamps `user_id`/`updated_at`, and adds the table
+to the realtime publication so the other device updates live. (You can also run
+`0001_init.sql` first if you want the full relational schema in place for later —
+sync doesn't need it.)
 
-## 3. Verify RLS — before writing app code
+## 3. Verify RLS — before trusting it
 
-Do not trust that RLS is on; prove it.
-
-**In the dashboard:** run [`../supabase/verify_rls.sql`](../supabase/verify_rls.sql)
-and confirm RLS is enabled on all 8 tables, all 8 policies exist, and the
-anon-role counts are zero.
-
-**From a real signed-out client** (the trustworthy test). With your URL and anon
-key, run this in a scratch Node script:
+Don't assume RLS is on; prove it. With your URL and anon key, run a scratch Node
+script signed-out:
 
 ```js
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(URL, ANON_KEY) // no auth = anonymous
-const { data, error } = await supabase.from('applications').select('*')
+const { data, error } = await supabase.from('user_state').select('*')
 console.log({ rows: data?.length, error })
-// Expect rows: 0 (or an empty array). If you can read rows unauthenticated,
-// STOP and fix RLS.
+// Expect rows: 0. If you can read rows unauthenticated, STOP and fix RLS.
 ```
 
-Insert a test row while signed in (via the dashboard), then re-run the snippet
-signed-out. Still zero? RLS works.
+## 4. Turn on email magic-link auth
 
-## 4. Auth (single user — you)
+1. **Authentication → Providers → Email**: keep it enabled (magic links work out
+   of the box; you don't need to enable passwords).
+2. **Authentication → URL Configuration → Redirect URLs**: add your app's URL so
+   the magic link is allowed to return to it. For GitHub Pages that's:
 
-Under **Authentication → Providers**, keep **Email** on and use magic links.
-Optionally turn **off** new sign-ups after your first login so only you can get
-in. There is no multi-user concept in this app; RLS scopes everything to your
-`auth.uid()`.
+   ```
+   https://<your-github-username>.github.io/Job-Tracker/
+   ```
 
-## 5. Storage for CV files
+   (Add `http://localhost:5173/Job-Tracker/` too if you want to test sync in
+   `npm run dev`.)
+3. Optional: once you've signed in once, turn **off** new sign-ups so only you
+   can get in. There's no multi-user concept here; RLS scopes everything to your
+   `auth.uid()`.
 
-Create a **private** bucket named `cvs` (Storage → New bucket). The CV locker
-stores a file name/link offline; online it uploads to this bucket and links via
-signed URLs (see the template).
+## 5. Add the two repo secrets and deploy
 
-## 6. Wire the app
-
-1. `npm install @supabase/supabase-js`
-2. Copy [`supabase-store-template.ts`](supabase-store-template.ts) into
-   `src/store/` and build a `SupabaseStore` that fulfils the same shape as the
-   value in `src/store/store.tsx`.
-3. Add a magic-link login gate around `<App/>`.
-4. Choose the backend at runtime: if `import.meta.env.VITE_SUPABASE_URL` is set,
-   use Supabase; otherwise stay on localStorage. That keeps offline dev working.
-
-**One behavioural difference to respect:** online, the database triggers write
-stage events and maintain `closed_from_stage`/`updated_at`. So the online store
-must NOT also insert stage events itself (the offline store does). Everything
-else is the same code path.
-
-## 7. Move your offline data in
-
-Your offline data and the DB share one shape. Export JSON from **Settings**,
-then insert each array into its table (a short seed script, or the dashboard
-importer). Because ids and timestamps are already present in the export, they
-carry straight over.
-
-## 8. Deploy secrets
-
-In the GitHub repo: **Settings → Secrets and variables → Actions** → add
+In GitHub: **Settings → Secrets and variables → Actions** → add
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The deploy workflow already
-reads them (empty is fine until you add them). Push to `main` to build and
-publish.
+reads them. Re-run the deploy (push to `main`, or run the **Deploy to GitHub
+Pages** workflow) so the published build carries the keys.
+
+That's it — the sync code is already in the app.
+
+## 6. Sign in on each device
+
+Open the app → **Settings → Sync across devices** → enter your email → click the
+link it sends. Do this on **both** your phone and laptop with the **same email**.
+The first device seeds the cloud from what's already on it; the second pulls it
+down and merges. From then on, changes flow both ways in the background.
+
+Your existing offline data isn't lost: the first device to sign in pushes its
+local board up, so whatever you already had becomes the cloud copy.
 
 ---
 
-### Note on free-tier pausing
+### Notes
 
-Free Supabase projects pause after a stretch of inactivity. If the app looks
-dead after a quiet fortnight, that's why — open the dashboard to wake it. Your
-regular JSON exports mean a paused (or lost) project never holds your data
-hostage.
+- **Backups still matter.** Sync is not a backup — a bad edit syncs everywhere.
+  Keep exporting JSON from Settings now and then. The app also snapshots an undo
+  point before adopting a merge, so a surprising first sync is reversible.
+- **Free-tier pausing.** Free Supabase projects pause after a stretch of
+  inactivity; if sync looks dead after a quiet fortnight, open the dashboard to
+  wake it. Offline still works throughout, and your JSON exports mean a paused or
+  lost project never holds your data hostage.
+- **CV files.** File upload to Supabase Storage isn't part of blob sync (the CV
+  builder assembles from data that *is* synced). A private `cvs` bucket + signed
+  URLs remain a future add-on.

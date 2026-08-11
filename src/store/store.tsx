@@ -35,6 +35,35 @@ import {
 } from './localStore'
 import { daysSince, todayIsoDate } from '../lib/dates'
 import * as m from './mutations'
+import { mergeDatasets } from '../lib/merge'
+import {
+  isSupabaseConfigured,
+  supabase,
+  getSession,
+  onAuthChange,
+  sendMagicLink,
+  signOut as sbSignOut,
+  fetchState,
+  saveState,
+  subscribeState,
+} from '../lib/supabase'
+import type { Session } from '@supabase/supabase-js'
+
+/** Cross-device sync status, surfaced to the Settings sync panel. */
+export interface SyncState {
+  /** The build carries Supabase env vars (cloud is possible at all). */
+  configured: boolean
+  /** Signed-in email, or null. */
+  email: string | null
+  status: 'off' | 'signed-out' | 'syncing' | 'synced' | 'error'
+  /** Server timestamp of the last successful sync. */
+  lastSyncedAt: string | null
+  error: string | null
+}
+
+/** Compact signature of a dataset, for cheap equality checks between local and
+ * remote (both are normalised before comparison, so ordering is stable). */
+const sig = (d: Dataset): string => JSON.stringify(d)
 
 /** Health of the local store, surfaced so the UI can warn before data is lost. */
 export interface DataHealth {
@@ -167,6 +196,15 @@ interface StoreValue {
   // preferences (onboarding + targets) — local, not part of the Dataset
   prefs: Prefs
   setPrefs: (patch: Partial<Prefs>) => void
+
+  // cloud sync (magic-link; no-op unless the build is Supabase-configured)
+  sync: SyncState
+  /** Email a magic sign-in link. */
+  signIn: (email: string) => Promise<void>
+  /** Sign out of cloud sync (local data stays put). */
+  signOutCloud: () => Promise<void>
+  /** Force a pull + merge + push right now. */
+  syncNow: () => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -189,6 +227,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs)
 
+  // Cloud-sync state.
+  const [session, setSession] = useState<Session | null>(null)
+  const [syncStatus, setSyncStatus] = useState<SyncState['status']>(
+    isSupabaseConfigured ? 'signed-out' : 'off',
+  )
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const sessionRef = useRef<Session | null>(null)
+  const remoteSigRef = useRef<string>('') // signature of what we believe is on the server
+  const syncReadyRef = useRef(false) // true only after the first pull, so we never push before merging
+  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const commit = useCallback((next: Dataset) => {
     ref.current = next
     setData(next)
@@ -196,6 +246,67 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // an export. A later successful write clears the flag.
     setSaveError(!saveDataset(next))
   }, [])
+
+  // Push the current dataset to the server (skips when unchanged). Idempotent.
+  const pushNow = useCallback(async () => {
+    if (!supabase || !sessionRef.current || !syncReadyRef.current) return
+    const current = ref.current
+    const s = sig(current)
+    if (s === remoteSigRef.current) return
+    try {
+      setSyncStatus('syncing')
+      const at = await saveState(sessionRef.current.user.id, current)
+      remoteSigRef.current = s
+      if (at) setLastSyncedAt(at)
+      setSyncError(null)
+      setSyncStatus('synced')
+    } catch (e) {
+      setSyncError((e as Error).message)
+      setSyncStatus('error')
+    }
+  }, [])
+
+  // Debounced push so a burst of edits collapses into one network write.
+  const schedulePush = useCallback(() => {
+    if (pushTimer.current) clearTimeout(pushTimer.current)
+    pushTimer.current = setTimeout(() => void pushNow(), 1200)
+  }, [pushNow])
+
+  // Pull the server copy, union-merge it with local, and adopt the result.
+  const pull = useCallback(async () => {
+    if (!supabase || !sessionRef.current) return
+    try {
+      setSyncStatus('syncing')
+      const remote = await fetchState()
+      const local = ref.current
+      if (!remote) {
+        // First device to sync: seed the server from what's here.
+        remoteSigRef.current = ''
+        syncReadyRef.current = true
+        await pushNow()
+        return
+      }
+      const remoteData = normaliseDataset(remote.data)
+      const localHasData = local.applications.length > 0 || local.evidence.length > 0
+      // Adopting a merge is destructive-ish; snapshot first so it's reversible.
+      if (localHasData && sig(local) !== sig(remoteData)) {
+        snapshotForUndo()
+        setUndoAvailable(true)
+      }
+      const merged = normaliseDataset(mergeDatasets(local, remoteData))
+      remoteSigRef.current = sig(remoteData)
+      syncReadyRef.current = true
+      commit(merged)
+      setLastSyncedAt(remote.updated_at)
+      setSyncError(null)
+      // If the union added rows the server didn't have, the data-change effect
+      // pushes them up; otherwise we're already in sync.
+      setSyncStatus(sig(merged) === remoteSigRef.current ? 'synced' : 'syncing')
+    } catch (e) {
+      setSyncError((e as Error).message)
+      setSyncStatus('error')
+    }
+  }, [commit, pushNow])
 
   // Wrap a mutation that returns just a Dataset.
   const run = useCallback(
@@ -214,6 +325,48 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [commit],
   )
+
+  // --- cloud sync effects ---------------------------------------------------
+
+  // Track the current session (persisted across reloads by supabase-js) and any
+  // magic-link sign-in / sign-out.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    void getSession().then((s) => s && setSession(s))
+    return onAuthChange((s) => setSession(s))
+  }, [])
+
+  // On sign-in: pull + merge, then live-subscribe so the other device's pushes
+  // arrive here. On sign-out: stop syncing (local data is untouched).
+  useEffect(() => {
+    sessionRef.current = session
+    if (!isSupabaseConfigured) return
+    if (!session) {
+      syncReadyRef.current = false
+      remoteSigRef.current = ''
+      setSyncStatus('signed-out')
+      return
+    }
+    void pull()
+    const unsub = subscribeState(session.user.id, (state) => {
+      const incoming = normaliseDataset(state.data)
+      if (sig(incoming) === remoteSigRef.current) return // our own write echoed back
+      const merged = normaliseDataset(mergeDatasets(ref.current, incoming))
+      remoteSigRef.current = sig(incoming)
+      commit(merged)
+      setLastSyncedAt(state.updated_at)
+      setSyncStatus('synced')
+    })
+    return unsub
+  }, [session, pull, commit])
+
+  // Any local change while signed in schedules a debounced push (unless it just
+  // matches what's already on the server).
+  useEffect(() => {
+    if (!isSupabaseConfigured || !session || !syncReadyRef.current) return
+    if (sig(data) === remoteSigRef.current) return
+    schedulePush()
+  }, [data, session, schedulePush])
 
   // Backup nudge: measure from the last export, or — if never exported — from
   // the earliest thing the user created, so a brand-new board isn't nagged but
@@ -338,6 +491,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const next = { ...prefs, ...patch }
       setPrefsState(next)
       savePrefs(next)
+    },
+
+    sync: {
+      configured: isSupabaseConfigured,
+      email: session?.user.email ?? null,
+      status: syncStatus,
+      lastSyncedAt,
+      error: syncError,
+    },
+    signIn: (email) => sendMagicLink(email),
+    signOutCloud: async () => {
+      await sbSignOut()
+    },
+    syncNow: () => {
+      if (session) void pull()
     },
   }
 

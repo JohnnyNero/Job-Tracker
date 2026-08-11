@@ -75,3 +75,26 @@ Kanban board, ATS match scores, job-board scraping, CV file generation,
 per-sector evidence variants, industry tags, multi-user/sharing, charts and
 dashboards. The header tally and the profile coverage view are the only
 "analytics", by design.
+
+## Cross-device sync is a whole-dataset blob, not relational mirroring
+
+**Decision:** when signed in, sync the entire `Dataset` as one JSON blob to a
+per-user `user_state` row (`0002_sync.sql`), rather than mirroring the twelve
+relational tables in `0001_init.sql`. The client merges with a union-by-id
+(`src/lib/merge.ts`); the relational schema stays for a possible future full
+migration but isn't used by sync.
+
+**Why:** this is a single-user, offline-first tracker whose data already lives as
+one blob in localStorage. Mirroring every table online would mean making all ~40
+mutations async, reconciling per-row conflicts, handling the double-trigger stage
+event, and queueing offline writes — large, risky, and at odds with the instant
+synchronous store. For one person moving between a phone and a laptop, a blob
+with union-merge is safer: it can't land in a partially-synced inconsistent
+state, an add on one device is never lost, and the board stays instant and fully
+offline. The cost — a same-row edit made offline on two devices at once resolves
+to the newer copy (by `updated_at` where present, else remote-wins) — is rare for
+one user and reversible via the pre-merge undo snapshot.
+
+**Loop-safety:** pushes record the server's dataset signature; a realtime echo
+equal to it is ignored, and `mergeDatasets` is order-stable + idempotent, so two
+devices converge instead of ping-ponging.
