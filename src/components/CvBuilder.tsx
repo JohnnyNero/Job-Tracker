@@ -6,7 +6,8 @@ import { TextField, TextArea } from './fields'
 import { CvPreview } from './CvPreview'
 import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
-import { checkBullet, keywordCoverage } from '../lib/cvChecks'
+import { checkBullet } from '../lib/cvChecks'
+import { keywordsForApp, keywordCoverage } from '../lib/keywords'
 import { CV_TEMPLATES } from '../lib/cvTemplates'
 
 const EMPTY_LAYOUT: CvLayout = {
@@ -271,7 +272,7 @@ function TailorPanel({ cv, versionId, layout, defaultAppId }: { cv: RenderedCv; 
   ]
     .filter(Boolean)
     .join(' ')
-  const cov = keywordCoverage(cvText, criteria)
+  const cov = app ? keywordCoverage(cvText, keywordsForApp(app, criteria)) : { covered: 0, total: 0, missing: [] }
 
   const experiences = [...store.data.cv_experience].sort((a, b) => a.position - b.position)
   const usedEvidence = new Set(
@@ -328,8 +329,7 @@ function TailorPanel({ cv, versionId, layout, defaultAppId }: { cv: RenderedCv; 
             </>
           ) : (
             <p className="section-note" style={{ marginTop: 0 }}>
-              This application has no essential criteria yet — add them on the application to check
-              coverage.
+              This application has no keywords yet — add some in its Keywords panel to check coverage.
             </p>
           )}
 

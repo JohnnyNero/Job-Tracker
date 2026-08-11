@@ -2,7 +2,7 @@ import { useStore } from '../store/store'
 import type { Application } from '../types'
 import { navigate, routes } from '../router'
 import { assembleCv } from '../lib/cv'
-import { keywordCoverage } from '../lib/cvChecks'
+import { keywordsForApp, keywordCoverage } from '../lib/keywords'
 import { CvPreview } from './CvPreview'
 
 // The bridge between an application and its CV: with a role profile set, pull in
@@ -29,7 +29,7 @@ export function CvForApplication({ app }: { app: Application }) {
         .filter(Boolean)
         .join(' ')
     : ''
-  const cov = rendered ? keywordCoverage(cvText, criteria) : null
+  const cov = rendered ? keywordCoverage(cvText, keywordsForApp(app, criteria)) : null
 
   const usedEvidence = new Set(
     cv?.layout ? Object.values(cv.layout.bullets).flat().map((b) => b.evidence_id).filter(Boolean) as string[] : [],

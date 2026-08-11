@@ -117,6 +117,7 @@ create table if not exists applications (
   source text,                        -- Indeed, LinkedIn, direct, referral
   link text,
   ad_text text,                       -- archived at capture; the listing will 404
+  keywords text[] not null default '{}',  -- curated job keywords for CV coverage
   location text,
   salary_stated text,                 -- free text; ranges and "competitive" both happen
   applied_on date,

@@ -187,6 +187,7 @@ export function normaliseDataset(raw: unknown): Dataset {
       source: strOrNull(x.source),
       link: strOrNull(x.link),
       ad_text: strOrNull(x.ad_text),
+      keywords: strArr(x.keywords),
       location: strOrNull(x.location),
       salary_stated: strOrNull(x.salary_stated),
       applied_on: strOrNull(x.applied_on),

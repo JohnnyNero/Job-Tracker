@@ -89,8 +89,12 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   Markdown + **JSON Resume** (MIT schema, portable). Export is **browser
   print-to-PDF** via the `@media print` block (single-column selectable text =
   ATS-safe) — no PDF library. `src/lib/cvChecks.ts` is the no-AI writing help
-  (weak-verb / missing-number / length flags + local keyword coverage vs a job's
-  criteria). The `.cv-sheet` is always light (a document), independent of theme.
+  (weak-verb / missing-number / length flags). Keyword extraction + coverage live
+  in **`src/lib/keywords.ts`** (`extractKeywords` seeds an application's editable
+  **`keywords`** list from the ad; `keywordsForApp` prefers that curated list,
+  falling back to a criteria-derived one; `keywordCoverage` matches it against the
+  assembled CV). `KeywordsPanel.tsx` is the per-job editor. The `.cv-sheet` is
+  always light (a document), independent of theme.
   CV↔profile allocation lives in **Role profiles** (`ProfileCvPanel` →
   `setProfileCurrentCv`), NOT on the CV pages. A CV allocated to a role profile
   (`profile_id` + `is_current`) is pulled into any application on that profile

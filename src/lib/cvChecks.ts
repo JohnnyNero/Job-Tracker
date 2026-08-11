@@ -1,7 +1,6 @@
-// Zero-model, fully-private writing checks for CV bullets and coverage. These
-// give much of the "help me craft it" value with no download and nothing leaving
-// the device — flagging weak phrasing, missing numbers, and job keywords the CV
-// doesn't mention yet.
+// Zero-model, fully-private writing checks for CV bullets. Flags weak phrasing,
+// missing numbers, and over-long lines with no download and nothing leaving the
+// device. (Keyword extraction and CV coverage live in src/lib/keywords.ts.)
 
 export interface BulletIssue {
   kind: 'weak' | 'number' | 'length'
@@ -27,40 +26,4 @@ export function checkBullet(text: string): BulletIssue[] {
     issues.push({ kind: 'length', msg: 'Long — tighten to one line so it scans fast.' })
   }
   return issues
-}
-
-const STOP = new Set([
-  'the', 'and', 'for', 'with', 'you', 'your', 'our', 'are', 'will', 'have', 'has', 'this', 'that',
-  'from', 'they', 'their', 'them', 'able', 'work', 'working', 'role', 'team', 'teams', 'across',
-  'within', 'into', 'other', 'strong', 'good', 'must', 'should', 'would', 'including', 'include',
-  'experience', 'experienced', 'ability', 'skills', 'knowledge', 'well', 'all', 'any', 'who', 'what',
-  'when', 'where', 'which', 'about', 'over', 'under', 'been', 'being', 'both', 'each', 'more', 'most',
-])
-
-function terms(text: string): string[] {
-  return Array.from(
-    new Set(
-      (text.toLowerCase().match(/[a-z][a-z+#.]{3,}/g) ?? []).filter((w) => !STOP.has(w)),
-    ),
-  )
-}
-
-export interface KeywordCoverage {
-  covered: number
-  total: number
-  /** Keywords from the essential criteria not found in the CV text. */
-  missing: string[]
-}
-
-/** How many keywords from the (essential) job criteria appear in the assembled
- * CV text — the poor-man's ATS match, computed entirely locally. */
-export function keywordCoverage(
-  cvText: string,
-  criteria: { text: string; essential: boolean }[],
-): KeywordCoverage {
-  const wanted = Array.from(new Set(criteria.filter((c) => c.essential).flatMap((c) => terms(c.text))))
-  if (wanted.length === 0) return { covered: 0, total: 0, missing: [] }
-  const hay = cvText.toLowerCase()
-  const missing = wanted.filter((w) => !hay.includes(w))
-  return { covered: wanted.length - missing.length, total: wanted.length, missing: missing.slice(0, 14) }
 }

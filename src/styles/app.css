@@ -1410,6 +1410,45 @@ table.pipeline td.company-cell {
     margin-left: 0;
   }
 }
+/* Keyword chips: the editable list, plus the "suggested from ad" offers. */
+.kw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.kw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.kw-x {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  opacity: 0.6;
+}
+.kw-x:hover {
+  opacity: 1;
+}
+.kw-suggest {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.kw-suggest .muted {
+  font-size: 11px;
+}
+.kw-suggest .chip {
+  font-size: 11px;
+}
 .crit-ref {
   list-style: none;
   margin: 0 0 12px;

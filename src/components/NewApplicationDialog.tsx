@@ -6,6 +6,7 @@ import { navigate, routes } from '../router'
 import { SOURCE_SUGGESTIONS } from '../lib/constants'
 import { parseAd, titleToRoleCompany, sourceFromUrl } from '../lib/parseAd'
 import { splitCriteria } from '../lib/criteria'
+import { extractKeywords } from '../lib/keywords'
 
 // Compute initial field values from a capture prefill (bookmarklet / share):
 // selection text runs through the ad parser; the page title backfills role /
@@ -79,6 +80,9 @@ export function NewApplicationDialog({ onClose, prefill }: { onClose: () => void
 
   function save() {
     if (!canSave) return
+    // Seed the criteria checklist and keyword list from the ad at capture time.
+    const criteria = splitCriteria(adText)
+    const keywords = extractKeywords(adText, criteria.join('\n'))
     const app = store.addApplication({
       role: role.trim(),
       company: company.trim() || null,
@@ -88,9 +92,8 @@ export function NewApplicationDialog({ onClose, prefill }: { onClose: () => void
       source: source.trim() || null,
       link: link.trim() || null,
       ad_text: adText.trim() || null,
+      keywords,
     })
-    // Seed the criteria checklist from the ad at capture time.
-    const criteria = splitCriteria(adText)
     if (criteria.length) store.addCriteriaBulk(app.id, criteria)
     onClose()
     navigate(routes.application(app.id))

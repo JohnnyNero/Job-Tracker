@@ -155,6 +155,9 @@ export interface Application {
   link: string | null
   /** Archived at capture; the listing will 404. */
   ad_text: string | null
+  /** Curated keyword/phrase list for this job — seeded from the ad, editable by
+   * hand, and used to check CV keyword coverage. */
+  keywords: string[]
   location: string | null
   /** Free text; ranges and "competitive" both happen. */
   salary_stated: string | null

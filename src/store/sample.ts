@@ -221,6 +221,7 @@ export function sampleDataset(): Dataset {
         link: 'https://example.com/job/ops-riverside',
         ad_text:
           'Operations Manager — Riverside Leisure\n\nWe are looking for a hands-on Operations Manager to run our busy leisure site.\n\nResponsibilities:\n- Own the site P&L and control labour costs\n- Build and manage staff rotas across a 7-day operation\n- Handle escalations and resolve customer and staff conflict\n- Maintain service standards and health & safety compliance\n\nRequirements:\n- Proven operations or duty management experience\n- Comfortable with cost control and labour percentage targets\n- Calm under pressure',
+        keywords: ['operations management', 'cost control', 'P&L', 'staff rotas', 'health & safety', 'labour costs'],
         location: 'Leeds',
         salary_stated: '£32,000–£36,000',
         applied_on: null,
@@ -244,6 +245,7 @@ export function sampleDataset(): Dataset {
         link: 'https://example.com/job/duty-vue',
         ad_text:
           'Duty Manager — Vue Cinemas\n\nLead the shift. Own front of house. Keep customers happy and staff on task.\n\n- Manage covers and breaks across the day\n- Train and support new starters\n- Handle incidents and complaints calmly\n- Cash-up and end-of-day reporting',
+        keywords: ['duty management', 'front of house', 'customer service', 'cash handling', 'staff training'],
         location: 'Manchester',
         salary_stated: 'Competitive',
         applied_on: daysAgoDate(14),
@@ -267,6 +269,7 @@ export function sampleDataset(): Dataset {
         link: 'https://example.com/job/site-parklife',
         ad_text:
           'Site Manager — ParkLife Ltd\n\nRun our flagship site end to end. Full P&L ownership, team of 20, seven-day operation.',
+        keywords: ['P&L', 'site management', 'team leadership'],
         location: 'Sheffield',
         salary_stated: '£38,000',
         applied_on: daysAgoDate(24),
@@ -290,6 +293,7 @@ export function sampleDataset(): Dataset {
         link: 'https://example.com/job/aom-odeon',
         ad_text:
           'Assistant Operations Manager — Odeon\n\nSupport the Operations Manager across a multi-screen site. Rotas, cost control, staff development.',
+        keywords: ['operations', 'cost control', 'rotas', 'staff development'],
         location: 'Leeds',
         salary_stated: '£29,000 + bonus',
         applied_on: daysAgoDate(21),
@@ -312,6 +316,7 @@ export function sampleDataset(): Dataset {
         source: 'Indeed',
         link: 'https://example.com/job/venue-warehouse',
         ad_text: 'Venue Manager — The Warehouse\n\nRun a busy live music venue.',
+        keywords: [],
         location: 'Manchester',
         salary_stated: '£30,000',
         applied_on: daysAgoDate(60),

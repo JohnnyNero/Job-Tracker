@@ -39,11 +39,13 @@ There are deliberately **no per-sector copies** of an evidence item.
   bullets live in `cv_versions.layout`, so different versions emphasise different
   achievements from the same history.
 - **applications** — the core record. Stage, outcome, the archived `ad_text`,
-  `told_them` (what you committed to on a call), and `next_action_at` (the
-  follow-up nudge / snooze that drives the "Needs you" triage queue; auto-set to
-  +7 business days on entering `applied`).
+  `keywords` (a curated `text[]` seeded from the ad and edited by hand — drives CV
+  keyword coverage), `told_them` (what you committed to on a call), and
+  `next_action_at` (the follow-up nudge / snooze that drives the "Needs you"
+  triage queue; auto-set to +7 business days on entering `applied`).
 - **application_evidence** — join: which evidence went into which application.
-- **criteria** — ad criteria checklist (Phase 4).
+- **criteria** — ad criteria checklist (Phase 4). Seeded by the section-aware
+  splitter in `src/lib/criteria.ts` (bullets-first; drops benefits/boilerplate).
 - **interview_questions** — questions to rehearse per application (interview prep
   mode). Each optionally links to an evidence story via `covered_by` and records
   whether it `asked` (came up), `notes`, and `position`.
