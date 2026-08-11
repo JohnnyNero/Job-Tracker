@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useStore } from '../store/store'
-import type { CvBullet, CvExperience, CvEducation, CvLayout } from '../types'
+import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion } from '../types'
 import { routes } from '../router'
-import { TextField, TextArea } from './fields'
+import { TextField, TextArea, SelectField } from './fields'
 import { CvPreview } from './CvPreview'
 import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
@@ -31,7 +31,7 @@ function download(name: string, text: string, type: string) {
 // The CV builder: assemble one CV version from your "about you" record, work
 // history, and evidence-bank bullets, then export an ATS-clean PDF/Markdown/
 // JSON Resume. Left pane edits, right pane is the live document.
-export function CvBuilder({ id }: { id: string }) {
+export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
   const store = useStore()
   const version = store.data.cv_versions.find((c) => c.id === id)
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
@@ -91,16 +91,17 @@ export function CvBuilder({ id }: { id: string }) {
 
       <div className="cv-build-grid" data-tab={tab}>
         <div className="compose-pane cv-build-editor">
+          <VersionMeta version={version} />
           <AboutYou />
           <SummaryPanel layout={layout} personSummary={store.data.person.summary} patchLayout={patchLayout} />
-          <TailorPanel cv={cv} versionId={id} layout={layout} />
+          <TailorPanel cv={cv} versionId={id} layout={layout} defaultAppId={appId} />
           <ExperiencePanel layout={layout} patchLayout={patchLayout} />
           <EducationPanel layout={layout} patchLayout={patchLayout} />
         </div>
 
         <div className="compose-pane cv-build-preview">
           <div className="cv-sheet-wrap">
-            <CvPreview cv={cv} />
+            <CvPreview cv={cv} printable />
           </div>
           <p className="section-note" style={{ marginTop: 10 }}>
             <strong>Print / PDF</strong> opens your browser&rsquo;s print dialog — choose{' '}
@@ -110,6 +111,45 @@ export function CvBuilder({ id }: { id: string }) {
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+function VersionMeta({ version }: { version: CvVersion }) {
+  const store = useStore()
+  const profiles = store.data.role_profiles
+
+  function toggleCurrent(next: boolean) {
+    // At most one current CV per profile.
+    if (next && version.profile_id) {
+      store.data.cv_versions
+        .filter((c) => c.id !== version.id && c.profile_id === version.profile_id && c.is_current)
+        .forEach((c) => store.updateCvVersion(c.id, { is_current: false }))
+    }
+    store.updateCvVersion(version.id, { is_current: next })
+  }
+
+  return (
+    <div className="panel">
+      <h2>This CV</h2>
+      <div className="field-grid">
+        <TextField label="Label" value={version.label} onCommit={(v) => store.updateCvVersion(version.id, { label: v })} />
+        <SelectField
+          label="Role profile"
+          value={version.profile_id ?? ''}
+          onChange={(v) => store.updateCvVersion(version.id, { profile_id: v || null })}
+          allowEmpty="—"
+          options={profiles.map((p) => ({ value: p.id, label: p.name }))}
+        />
+      </div>
+      <label className="row" style={{ gap: 8, cursor: version.profile_id ? 'pointer' : 'default', marginTop: 4 }}>
+        <input type="checkbox" checked={version.is_current} disabled={!version.profile_id} onChange={(e) => toggleCurrent(e.target.checked)} style={{ width: 'auto' }} />
+        <span>Current CV for this profile{!version.profile_id ? ' (pick a profile first)' : ''}</span>
+      </label>
+      <p className="section-note">
+        Allocate a CV to a role profile and it&rsquo;s pulled in automatically on any application you
+        set to that profile.
+      </p>
     </div>
   )
 }
@@ -200,9 +240,9 @@ function SummaryPanel({ layout, personSummary, patchLayout }: { layout: CvLayout
   )
 }
 
-function TailorPanel({ cv, versionId, layout }: { cv: RenderedCv; versionId: string; layout: CvLayout }) {
+function TailorPanel({ cv, versionId, layout, defaultAppId }: { cv: RenderedCv; versionId: string; layout: CvLayout; defaultAppId?: string }) {
   const store = useStore()
-  const [appId, setAppId] = useState('')
+  const [appId, setAppId] = useState(defaultAppId ?? '')
   const [targetExp, setTargetExp] = useState('')
   const apps = store.data.applications.filter((a) => a.stage !== 'closed')
   const app = apps.find((a) => a.id === appId)

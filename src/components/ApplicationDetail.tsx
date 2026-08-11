@@ -9,6 +9,7 @@ import { TextField, TextArea, DateField, UrlField, SelectField } from './fields'
 import { StagePill } from './common'
 import { CloseDialog } from './CloseDialog'
 import { CriteriaPanel } from './CriteriaPanel'
+import { CvForApplication } from './CvForApplication'
 
 export function ApplicationDetail({ id }: { id: string }) {
   const store = useStore()
@@ -183,6 +184,8 @@ export function ApplicationDetail({ id }: { id: string }) {
           </div>
 
           <CriteriaPanel applicationId={app.id} adText={app.ad_text} />
+
+          <CvForApplication app={app} />
 
           <div className="panel">
             <h2>Told them</h2>

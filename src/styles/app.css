@@ -528,6 +528,19 @@ label.field > .lbl {
   flex-wrap: wrap;
 }
 
+/* CV ↔ application bridge (on the application detail) */
+.cvfa-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+.cvfa-preview > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 12px;
+  color: var(--text-2);
+}
+
 /* ------------------------------------------------------------ CV builder */
 .cv-build-grid {
   display: grid;

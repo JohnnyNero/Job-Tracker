@@ -408,6 +408,39 @@ export function updateCvVersion(
   return { ...data, cv_versions: replace(data.cv_versions, { ...existing, ...patch }) }
 }
 
+/** Duplicate a CV version (deep-copying its layout with fresh bullet ids) — used
+ * to make a job-specific tailored copy without touching the base. Keeps the same
+ * profile; never inherits `is_current`. */
+export function duplicateCvVersion(data: Dataset, sourceId: string, label: string): [Dataset, CvVersion] {
+  const src = data.cv_versions.find((c) => c.id === sourceId)
+  if (!src) return addCvVersion(data, label)
+  const layout = src.layout
+    ? {
+        summary: src.layout.summary,
+        hidden_experience_ids: [...src.layout.hidden_experience_ids],
+        hidden_education_ids: [...src.layout.hidden_education_ids],
+        skills: src.layout.skills ? [...src.layout.skills] : null,
+        bullets: Object.fromEntries(
+          Object.entries(src.layout.bullets).map(([k, arr]) => [
+            k,
+            arr.map((b) => ({ ...b, id: newId() })),
+          ]),
+        ),
+      }
+    : null
+  const cv: CvVersion = {
+    id: newId(),
+    label,
+    profile_id: src.profile_id,
+    angle: src.angle,
+    file_path: null,
+    is_current: false,
+    layout,
+    created_at: nowIso(),
+  }
+  return [{ ...data, cv_versions: [...data.cv_versions, cv] }, cv]
+}
+
 export function deleteCvVersion(data: Dataset, id: string): Dataset {
   return {
     ...data,

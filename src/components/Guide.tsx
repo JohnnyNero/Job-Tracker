@@ -202,6 +202,13 @@ export function Guide() {
             over-length — instant, private, nothing leaves your device.
           </li>
           <li>
+            <b>Allocated to a role profile.</b> Mark a CV the <b>current</b> version for a profile
+            (in the builder or the locker). Then any application you set to that profile{' '}
+            <b>pulls that CV in</b> — its “CV for this application” panel shows how well it covers the
+            job&rsquo;s criteria and lets you <b>use it</b> or <b>tailor a copy for this job</b>{' '}
+            (a duplicate you tweak without touching the base).
+          </li>
+          <li>
             <b>Export.</b> <b>Print / PDF</b> produces a single-column, ATS-readable document
             (real selectable text, standard headings) — plus <b>Markdown</b> and <b>JSON Resume</b>{' '}
             for portability. For the cleanest PDF, set the print margins to Default and turn headers

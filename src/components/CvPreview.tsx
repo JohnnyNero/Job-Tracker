@@ -1,10 +1,12 @@
 import type { RenderedCv } from '../lib/cv'
 
 // The rendered CV as ATS-safe semantic HTML: single column, real text, standard
-// headings, no tables/graphics. This same DOM is what prints (see @media print).
-export function CvPreview({ cv }: { cv: RenderedCv }) {
+// headings, no tables/graphics. `printable` adds the .cv-print hook so this is
+// the element the print stylesheet targets — only the builder's preview sets it,
+// so an inline preview elsewhere never hijacks printing.
+export function CvPreview({ cv, printable = false }: { cv: RenderedCv; printable?: boolean }) {
   return (
-    <div className="cv-sheet cv-print">
+    <div className={`cv-sheet ${printable ? 'cv-print' : ''}`}>
       <header className="cv-head">
         <h1>{cv.name || 'Your Name'}</h1>
         {cv.headline && <p className="cv-headline">{cv.headline}</p>}

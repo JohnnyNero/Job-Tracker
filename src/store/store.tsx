@@ -107,6 +107,7 @@ interface StoreValue {
   // cv versions
   addCvVersion: (label: string) => CvVersion
   updateCvVersion: (id: string, patch: Partial<Omit<CvVersion, 'id' | 'created_at'>>) => void
+  duplicateCvVersion: (sourceId: string, label: string) => CvVersion
   deleteCvVersion: (id: string) => void
 
   // cv builder
@@ -254,6 +255,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     addCvVersion: (label) => runCreate((d) => m.addCvVersion(d, label)),
     updateCvVersion: (id, patch) => run((d) => m.updateCvVersion(d, id, patch)),
+    duplicateCvVersion: (sourceId, label) => runCreate((d) => m.duplicateCvVersion(d, sourceId, label)),
     deleteCvVersion: (id) => run((d) => m.deleteCvVersion(d, id)),
 
     updatePerson: (patch) => run((d) => m.updatePerson(d, patch)),

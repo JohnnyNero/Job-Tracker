@@ -91,6 +91,12 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   ATS-safe) — no PDF library. `src/lib/cvChecks.ts` is the no-AI writing help
   (weak-verb / missing-number / length flags + local keyword coverage vs a job's
   criteria). The `.cv-sheet` is always light (a document), independent of theme.
+  A CV allocated to a role profile (`profile_id` + `is_current`) is pulled into
+  any application on that profile via `CvForApplication.tsx` (coverage vs the
+  ad + "tailor a copy": `duplicateCvVersion` → `#/cv/:id?app=` opens the builder
+  with that application pre-selected in the tailor panel). Only the builder's
+  preview gets the `.cv-print` hook (`CvPreview printable`), so an inline preview
+  elsewhere never hijacks printing.
 
 Full detail: `docs/architecture.md`. Data model: `docs/data-model.md`.
 Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.

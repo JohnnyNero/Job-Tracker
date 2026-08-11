@@ -39,7 +39,7 @@ export function App() {
         {route.name === 'evidence' && <Evidence />}
         {route.name === 'profiles' && <Profiles />}
         {route.name === 'cv' && <CvLocker />}
-        {route.name === 'cvbuild' && <CvBuilder id={route.id} />}
+        {route.name === 'cvbuild' && <CvBuilder id={route.id} appId={route.appId} />}
         {route.name === 'settings' && <Settings />}
         {route.name === 'guide' && <Guide />}
         {route.name === 'not_found' && <NotFound path={route.path} />}
