@@ -120,7 +120,14 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   pre-selected in the tailor panel). An evidence-linked CV bullet can be
   **reworded per-CV**: a non-empty `CvBullet.text` overrides the evidence's own
   bullet in `assembleCv` (Reset clears it; Detach drops `evidence_id`) — the
-  saved evidence is never touched. Only the builder's preview gets the
+  saved evidence is never touched, UNLESS you hit **Save as default**, which
+  pushes the reword back into `evidence.bullet` (updating every live-linked CV)
+  and clears the per-CV override. **Skills are grouped**: `Person.skills` (and the
+  `CvLayout.skills` override) are `SkillGroup[]` (`{ name, items }`), rendered as
+  optional sub-category lines; a legacy flat `string[]` loads as one unnamed group
+  via `normaliseSkillGroups` (types.ts). `RenderedCv` carries both `skillGroups`
+  (for layout) and a flattened `skills` (for keyword coverage). Only the builder's
+  preview gets the
   `.cv-print` hook (`CvPreview printable`), so an inline preview never hijacks
   printing. Six ATS-safe **templates** (`src/lib/cvTemplates.ts` → `.tpl-<id>`
   classes on `.cv-sheet`) are CSS-only looks over the same DOM (system fonts,

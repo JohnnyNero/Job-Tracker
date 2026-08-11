@@ -34,7 +34,8 @@ There are deliberately **no per-sector copies** of an evidence item.
   builder (which experiences/education show, and the bullets under each — a live
   link to an evidence item or manual text).
 - **person** — single "about you" record for the CV builder: name, contact,
-  links, default summary, skills. One row per user.
+  links, default summary, and `skills` as `SkillGroup[]` (`{ name, items }`) so a
+  CV's skills section can be split into optional sub-categories. One row per user.
 - **cv_experience / cv_education** — global work history / qualifications;
   bullets live in `cv_versions.layout`, so different versions emphasise different
   achievements from the same history.

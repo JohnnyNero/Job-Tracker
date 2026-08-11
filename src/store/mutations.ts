@@ -420,7 +420,9 @@ export function duplicateCvVersion(data: Dataset, sourceId: string, label: strin
         summary: src.layout.summary,
         hidden_experience_ids: [...src.layout.hidden_experience_ids],
         hidden_education_ids: [...src.layout.hidden_education_ids],
-        skills: src.layout.skills ? [...src.layout.skills] : null,
+        skills: src.layout.skills
+          ? src.layout.skills.map((g) => ({ name: g.name, items: [...g.items] }))
+          : null,
         template: src.layout.template,
         bullets: Object.fromEntries(
           Object.entries(src.layout.bullets).map(([k, arr]) => [

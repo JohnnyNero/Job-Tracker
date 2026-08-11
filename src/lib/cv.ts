@@ -1,4 +1,4 @@
-import type { Dataset, CvLayout } from '../types'
+import type { Dataset, CvLayout, SkillGroup } from '../types'
 
 // Assemble a CV version into a rendered document (resolving live-linked evidence
 // bullets), and project it to Markdown / JSON Resume for export. Pure functions
@@ -26,6 +26,9 @@ export interface RenderedCv {
   contacts: string[]
   summary: string | null
   experiences: RenderedExperience[]
+  /** Skills grouped by optional sub-category (for the rendered layout). */
+  skillGroups: SkillGroup[]
+  /** All skill items flattened — for keyword coverage and flat consumers. */
   skills: string[]
   education: RenderedEducation[]
 }
@@ -109,13 +112,16 @@ export function assembleCv(data: Dataset, versionId: string): RenderedCv | null 
       note: (e.note && e.note.trim()) || null,
     }))
 
+  const skillGroups: SkillGroup[] = (layout.skills ?? p.skills).filter((g) => g.items.length)
+
   return {
     name: p.full_name,
     headline: p.headline,
     contacts,
     summary: (layout.summary && layout.summary.trim()) || p.summary,
     experiences,
-    skills: layout.skills ?? p.skills,
+    skillGroups,
+    skills: skillGroups.flatMap((g) => g.items),
     education,
   }
 }
@@ -134,7 +140,12 @@ export function cvToMarkdown(cv: RenderedCv): string {
       for (const b of e.bullets) out.push(`- ${b}`)
     }
   }
-  if (cv.skills.length) out.push('', '## Skills', cv.skills.join(' · '))
+  if (cv.skillGroups.length) {
+    out.push('', '## Skills')
+    for (const g of cv.skillGroups) {
+      out.push(g.name ? `**${g.name}:** ${g.items.join(', ')}` : g.items.join(', '))
+    }
+  }
   if (cv.education.length) {
     out.push('', '## Education')
     for (const e of cv.education) {
@@ -170,6 +181,8 @@ export function cvToJsonResume(cv: RenderedCv): unknown {
       // dissertation/honours line survives a round-trip.
       courses: e.note ? [e.note] : undefined,
     })),
-    skills: cv.skills.map((s) => ({ name: s })),
+    // JSON Resume skills are {name, keywords}; map each group to one, and give an
+    // uncategorised group a generic name so it stays schema-valid.
+    skills: cv.skillGroups.map((g) => ({ name: g.name || 'Skills', keywords: g.items })),
   }
 }

@@ -75,7 +75,9 @@ create table if not exists person (
   location text,
   links text[] not null default '{}',
   summary text,
-  skills text[] not null default '{}'
+  -- Grouped skills: jsonb array of { name, items[] } (a legacy text[] flat list
+  -- loads as one unnamed group client-side). See src/types.ts SkillGroup.
+  skills jsonb not null default '[]'::jsonb
 );
 
 create table if not exists cv_experience (

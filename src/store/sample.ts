@@ -59,7 +59,10 @@ export function sampleDataset(): Dataset {
       links: ['linkedin.com/in/jamie-rivera'],
       summary:
         'Operations manager with seven years leading multi-site leisure teams — fair rotas, tight cost control, calm under pressure.',
-      skills: ['Rota & scheduling', 'Cost control', 'P&L ownership', 'Health & safety', 'Team leadership'],
+      skills: [
+        { name: 'Operations', items: ['Rota & scheduling', 'Cost control', 'P&L ownership', 'Health & safety'] },
+        { name: 'Leadership', items: ['Team leadership', 'Training & onboarding', 'Conflict resolution'] },
+      ],
     },
     capabilities: [
       { id: newId(), name: 'cost control', note: 'Reducing spend without cutting service.' },

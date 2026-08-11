@@ -15,7 +15,7 @@ import type {
   Person,
   RoleProfile,
 } from '../types'
-import { STAGES, OUTCOMES, emptyPerson } from '../types'
+import { STAGES, OUTCOMES, emptyPerson, normaliseSkillGroups } from '../types'
 import { nowIso } from '../lib/id'
 
 // Offline persistence. The entire dataset lives under one localStorage key as
@@ -71,7 +71,7 @@ function normPerson(v: unknown): Person {
     location: strOrNull(o.location),
     links: strArr(o.links),
     summary: strOrNull(o.summary),
-    skills: strArr(o.skills),
+    skills: normaliseSkillGroups(o.skills),
   }
 }
 
@@ -91,7 +91,7 @@ function normLayout(v: unknown): CvLayout | null {
     hidden_experience_ids: strArr(o.hidden_experience_ids),
     hidden_education_ids: strArr(o.hidden_education_ids),
     bullets,
-    skills: Array.isArray(o.skills) ? strArr(o.skills) : null,
+    skills: Array.isArray(o.skills) ? normaliseSkillGroups(o.skills) : null,
     template: typeof o.template === 'string' ? o.template : undefined,
   }
 }

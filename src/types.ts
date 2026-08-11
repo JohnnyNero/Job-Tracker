@@ -78,8 +78,15 @@ export interface CvVersion {
 
 // --- CV builder ------------------------------------------------------------
 
+/** A named group of skills for the CV skills section. An empty `name` renders the
+ * items with no category heading (the flat, uncategorised case). */
+export interface SkillGroup {
+  name: string
+  items: string[]
+}
+
 /** "About you" — the stable backbone of every CV. One record for the single
- * user; skills and links are simple lists. */
+ * user; links are a simple list, skills are grouped into optional sub-categories. */
 export interface Person {
   full_name: string
   headline: string | null
@@ -89,7 +96,9 @@ export interface Person {
   links: string[]
   /** Default professional summary; a CV version can override it. */
   summary: string | null
-  skills: string[]
+  /** Skills grouped by optional sub-category (e.g. Technical / Leadership). A
+   * legacy flat string[] loads as one unnamed group. */
+  skills: SkillGroup[]
 }
 
 /** A role in your work history (shared across CV versions). Bullets live in each
@@ -134,8 +143,8 @@ export interface CvLayout {
   hidden_education_ids: string[]
   /** experience id → ordered bullets. */
   bullets: Record<string, CvBullet[]>
-  /** null = use Person.skills. */
-  skills: string[] | null
+  /** null = use Person.skills. Grouped, same shape as Person.skills. */
+  skills: SkillGroup[] | null
   /** Visual template id (see src/lib/cvTemplates.ts). Defaults to 'classic'. */
   template?: string
 }
@@ -243,4 +252,25 @@ export function emptyPerson(): Person {
     summary: null,
     skills: [],
   }
+}
+
+/** Coerce a legacy flat skill list or a grouped list into SkillGroup[]. Shared by
+ * the store's normaliser and any importer. */
+export function normaliseSkillGroups(v: unknown): SkillGroup[] {
+  if (!Array.isArray(v)) return []
+  // Legacy flat list of strings → one unnamed group.
+  if (v.every((x) => typeof x === 'string')) {
+    const items = (v as string[]).map((s) => s.trim()).filter(Boolean)
+    return items.length ? [{ name: '', items }] : []
+  }
+  const out: SkillGroup[] = []
+  for (const g of v) {
+    if (!g || typeof g !== 'object') continue
+    const o = g as { name?: unknown; items?: unknown }
+    const items = Array.isArray(o.items)
+      ? o.items.filter((x): x is string => typeof x === 'string').map((s) => s.trim()).filter(Boolean)
+      : []
+    if (items.length) out.push({ name: typeof o.name === 'string' ? o.name : '', items })
+  }
+  return out
 }

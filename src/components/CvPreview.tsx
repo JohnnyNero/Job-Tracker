@@ -45,10 +45,20 @@ export function CvPreview({ cv, printable = false, template }: { cv: RenderedCv;
         </section>
       )}
 
-      {cv.skills.length > 0 && (
+      {cv.skillGroups.length > 0 && (
         <section className="cv-section">
           <h2>Skills</h2>
-          <p className="cv-skills">{cv.skills.join('  ·  ')}</p>
+          {cv.skillGroups.map((g, i) =>
+            g.name ? (
+              <p className="cv-skills" key={i}>
+                <span className="cv-skill-cat">{g.name}:</span> {g.items.join('  ·  ')}
+              </p>
+            ) : (
+              <p className="cv-skills" key={i}>
+                {g.items.join('  ·  ')}
+              </p>
+            ),
+          )}
         </section>
       )}
 

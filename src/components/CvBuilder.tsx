@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store/store'
-import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion } from '../types'
+import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion, SkillGroup } from '../types'
 import { navigate, routes } from '../router'
 import { TextField, TextArea } from './fields'
 import { CvPreview } from './CvPreview'
@@ -172,14 +172,6 @@ function VersionMeta({ version }: { version: CvVersion }) {
 function AboutYou() {
   const store = useStore()
   const p = store.data.person
-  const [skill, setSkill] = useState('')
-
-  function addSkill() {
-    const s = skill.trim()
-    if (!s || p.skills.includes(s)) return
-    store.updatePerson({ skills: [...p.skills, s] })
-    setSkill('')
-  }
 
   return (
     <div className="panel">
@@ -205,36 +197,114 @@ function AboutYou() {
         onCommit={(v) => store.updatePerson({ summary: v || null })}
         placeholder="A two-line pitch — used on every CV unless a version overrides it."
       />
-      <label className="field">
+      <div className="field">
         <span className="lbl">Skills</span>
+        <p className="section-note" style={{ marginTop: 0, marginBottom: 8 }}>
+          Group skills into optional sub-categories (Technical, Leadership…), or leave a category
+          blank for a plain list.
+        </p>
+        <SkillsEditor groups={p.skills} onChange={(g) => store.updatePerson({ skills: g })} />
+      </div>
+    </div>
+  )
+}
+
+/** Edit grouped skills. Operates on the committed groups directly; when there are
+ * none, a single implicit unnamed group lets you just start typing (the flat,
+ * category-free case). */
+function SkillsEditor({ groups, onChange }: { groups: SkillGroup[]; onChange: (g: SkillGroup[]) => void }) {
+  const base: SkillGroup[] = groups.length ? groups : [{ name: '', items: [] }]
+  const setGroup = (i: number, patch: Partial<SkillGroup>) =>
+    onChange(base.map((g, gi) => (gi === i ? { ...g, ...patch } : g)))
+
+  return (
+    <div className="skills-editor">
+      {base.map((g, i) => (
+        <SkillGroupRow
+          key={i}
+          group={g}
+          removable={base.length > 1}
+          onName={(name) => setGroup(i, { name })}
+          onAdd={(raw) => {
+            const t = raw.trim()
+            if (!t || g.items.some((x) => x.toLowerCase() === t.toLowerCase())) return
+            setGroup(i, { items: [...g.items, t] })
+          }}
+          onRemoveItem={(item) => setGroup(i, { items: g.items.filter((x) => x !== item) })}
+          onRemoveGroup={() => onChange(base.filter((_, gi) => gi !== i))}
+        />
+      ))}
+      <button type="button" className="btn ghost small" onClick={() => onChange([...base, { name: '', items: [] }])}>
+        + Add category
+      </button>
+    </div>
+  )
+}
+
+function SkillGroupRow({
+  group,
+  removable,
+  onName,
+  onAdd,
+  onRemoveItem,
+  onRemoveGroup,
+}: {
+  group: SkillGroup
+  removable: boolean
+  onName: (name: string) => void
+  onAdd: (item: string) => void
+  onRemoveItem: (item: string) => void
+  onRemoveGroup: () => void
+}) {
+  const [entry, setEntry] = useState('')
+  const add = () => {
+    if (entry.trim()) {
+      onAdd(entry)
+      setEntry('')
+    }
+  }
+  return (
+    <div className="skill-group">
+      <div className="row" style={{ gap: 8, marginBottom: 6 }}>
+        <input
+          key={group.name}
+          className="grow"
+          aria-label="Skill category"
+          placeholder="Category (optional) — e.g. Technical, Leadership"
+          defaultValue={group.name}
+          onBlur={(e) => e.target.value !== group.name && onName(e.target.value)}
+        />
+        {removable && (
+          <button type="button" className="btn ghost small" onClick={onRemoveGroup} aria-label="Remove category" title="Remove this category">
+            ×
+          </button>
+        )}
+      </div>
+      {group.items.length > 0 && (
         <div className="chips" style={{ marginBottom: 8 }}>
-          {p.skills.map((s) => (
+          {group.items.map((s) => (
             <span key={s} className="chip">
               {s}
-              <button
-                className="chip-x"
-                aria-label={`Remove ${s}`}
-                onClick={() => store.updatePerson({ skills: p.skills.filter((x) => x !== s) })}
-              >
+              <button className="chip-x" aria-label={`Remove ${s}`} onClick={() => onRemoveItem(s)}>
                 ×
               </button>
             </span>
           ))}
         </div>
-        <div className="inline-add">
-          <input
-            type="text"
-            aria-label="Add a skill"
-            placeholder="Add a skill…"
-            value={skill}
-            onChange={(e) => setSkill(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addSkill()}
-          />
-          <button className="btn" onClick={addSkill}>
-            Add
-          </button>
-        </div>
-      </label>
+      )}
+      <div className="inline-add">
+        <input
+          type="text"
+          aria-label="Add a skill"
+          placeholder="Add a skill…"
+          value={entry}
+          onChange={(e) => setEntry(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && add()}
+        />
+        <button type="button" className="btn" onClick={add}>
+          Add
+        </button>
+      </div>
     </div>
   )
 }
@@ -461,6 +531,16 @@ function ExperienceCard({ exp, layout, patchLayout, first, last }: { exp: CvExpe
                 }
               }}
               onReset={() => update({ text: null })}
+              onMakeDefault={() => {
+                // Push this CV's reword back into the saved evidence bullet, so it
+                // becomes the default everywhere; then drop the per-CV override and
+                // go back to live-linked (now showing the updated evidence text).
+                const v = b.text?.trim()
+                if (b.evidence_id && v) {
+                  store.updateEvidence(b.evidence_id, { bullet: v })
+                  update({ text: null })
+                }
+              }}
               onDetach={() => update({ evidence_id: null, text: b.text?.trim() ? b.text : evText })}
               onUp={() => i > 0 && setBullets(swap(bullets, i, i - 1))}
               onDown={() => i < bullets.length - 1 && setBullets(swap(bullets, i, i + 1))}
@@ -502,12 +582,13 @@ function swap<T>(arr: T[], i: number, j: number): T[] {
   return next
 }
 
-function BulletRow({ bullet, evidenceTitle, evidenceText, onText, onReset, onDetach, onUp, onDown, onDelete, first, last }: {
+function BulletRow({ bullet, evidenceTitle, evidenceText, onText, onReset, onMakeDefault, onDetach, onUp, onDown, onDelete, first, last }: {
   bullet: CvBullet
   evidenceTitle: string | null
   evidenceText: string
   onText: (t: string) => void
   onReset: () => void
+  onMakeDefault: () => void
   onDetach: () => void
   onUp: () => void
   onDown: () => void
@@ -542,9 +623,18 @@ function BulletRow({ bullet, evidenceTitle, evidenceText, onText, onReset, onDet
               {overridden ? ' · reworded for this CV' : ''}
             </span>
             {overridden && (
-              <button className="btn ghost small" onClick={onReset} title="Discard the override; use the saved evidence wording">
-                Reset
-              </button>
+              <>
+                <button className="btn ghost small" onClick={onReset} title="Discard the override; use the saved evidence wording">
+                  Reset
+                </button>
+                <button
+                  className="btn ghost small"
+                  onClick={onMakeDefault}
+                  title="Save this wording back to the evidence — makes it the default on every CV that uses it"
+                >
+                  Save as default
+                </button>
+              </>
             )}
             <button className="btn ghost small" onClick={onDetach} title="Unlink from evidence — becomes a standalone bullet">
               Detach

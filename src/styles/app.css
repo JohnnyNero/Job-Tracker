@@ -641,7 +641,26 @@ label.field > .lbl {
 }
 .cv-summary,
 .cv-skills {
-  margin: 0;
+  margin: 0 0 3px;
+}
+.cv-skills:last-child {
+  margin-bottom: 0;
+}
+/* The sub-category label on a skills line (e.g. "Leadership:"). */
+.cv-skill-cat {
+  font-weight: 700;
+}
+/* Grouped-skills editor in "About you". */
+.skills-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.skill-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--surface);
 }
 .cv-entry {
   margin-bottom: 11px;
