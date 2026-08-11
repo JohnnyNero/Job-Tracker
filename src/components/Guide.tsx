@@ -202,11 +202,18 @@ export function Guide() {
             over-length — instant, private, nothing leaves your device.
           </li>
           <li>
-            <b>Allocated to a role profile.</b> Mark a CV the <b>current</b> version for a profile
-            (in the builder or the locker). Then any application you set to that profile{' '}
-            <b>pulls that CV in</b> — its “CV for this application” panel shows how well it covers the
-            job&rsquo;s criteria and lets you <b>use it</b> or <b>tailor a copy for this job</b>{' '}
-            (a duplicate you tweak without touching the base).
+            <b>Allocated from Role profiles.</b> Under <a href={routes.profiles()}>Role profiles</a>,
+            the <b>CV for this profile</b> panel picks which CV is that profile&rsquo;s{' '}
+            <b>current</b> one. Then any application you set to that profile <b>pulls that CV in</b> —
+            its “CV for this application” panel shows how well it covers the job&rsquo;s criteria and
+            lets you <b>use it</b> or <b>tailor a copy for this job</b> (a duplicate you tweak without
+            touching the base).
+          </li>
+          <li>
+            <b>Reword a bullet for one CV.</b> An evidence bullet on a CV is editable — change the
+            wording and it applies to <em>this CV only</em>; the saved evidence item is untouched.{' '}
+            <b>Reset</b> puts it back to the evidence wording, or <b>Detach</b> makes it a
+            standalone bullet.
           </li>
           <li>
             <b>Export.</b> <b>Print / PDF</b> produces a single-column, ATS-readable document

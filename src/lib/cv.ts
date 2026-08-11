@@ -76,6 +76,9 @@ export function assembleCv(data: Dataset, versionId: string): RenderedCv | null 
       const bullets = (layout.bullets[e.id] ?? [])
         .map((b) => {
           if (b.evidence_id) {
+            // A per-CV override wins over the evidence's own bullet, so you can
+            // reword it here without touching the saved evidence item.
+            if (b.text && b.text.trim()) return b.text.trim()
             const ev = evById.get(b.evidence_id)
             return (ev?.bullet || ev?.title || '').trim()
           }

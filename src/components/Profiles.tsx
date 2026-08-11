@@ -3,6 +3,7 @@ import { useStore } from '../store/store'
 import type { RoleProfile } from '../types'
 import { TextField, TextArea } from './fields'
 import { EmptyState } from './common'
+import { navigate, routes } from '../router'
 
 export function Profiles() {
   const store = useStore()
@@ -187,6 +188,8 @@ function ProfileEditor({ profile }: { profile: RoleProfile }) {
         </label>
       </div>
 
+      <ProfileCvPanel profile={profile} />
+
       <div className="panel">
         <h2>Coverage</h2>
         <p className="section-note" style={{ marginTop: 0, marginBottom: 10 }}>
@@ -214,6 +217,72 @@ function ProfileEditor({ profile }: { profile: RoleProfile }) {
           </p>
         )}
       </div>
+    </div>
+  )
+}
+
+function ProfileCvPanel({ profile }: { profile: RoleProfile }) {
+  const store = useStore()
+  const cvs = store.data.cv_versions
+  const profileCvs = cvs.filter((c) => c.profile_id === profile.id)
+  const current = profileCvs.find((c) => c.is_current) ?? null
+
+  return (
+    <div className="panel">
+      <h2>CV for this profile</h2>
+      <p className="section-note" style={{ marginTop: 0, marginBottom: 10 }}>
+        The <strong>current</strong> CV is pulled into any application you set to this profile —
+        ready to use or tailor to the job.
+      </p>
+
+      {cvs.length === 0 ? (
+        <p className="muted" style={{ marginBottom: 0 }}>
+          No CVs yet.{' '}
+          <a href={routes.cv()} onClick={(e) => { e.preventDefault(); navigate(routes.cv()) }}>
+            Create one in the CV locker
+          </a>
+          , then set it here.
+        </p>
+      ) : (
+        <>
+          <label className="field">
+            <span className="lbl">Current CV</span>
+            <select
+              value={current?.id ?? ''}
+              onChange={(e) => store.setProfileCurrentCv(profile.id, e.target.value || null)}
+            >
+              <option value="">— none —</option>
+              {cvs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                  {c.profile_id && c.profile_id !== profile.id ? ' (currently on another profile)' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {profileCvs.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 6 }}>
+              {profileCvs.map((c) => (
+                <div key={c.id} className="row" style={{ gap: 8, padding: '6px 0', borderTop: '1px solid var(--border)' }}>
+                  <span style={{ flex: 1, fontWeight: c.is_current ? 700 : 500 }}>
+                    {c.label}
+                    {c.is_current && <span className="chip on" style={{ marginLeft: 8 }}>current</span>}
+                  </span>
+                  {!c.is_current && (
+                    <button className="btn ghost small" onClick={() => store.setProfileCurrentCv(profile.id, c.id)}>
+                      Make current
+                    </button>
+                  )}
+                  <a className="btn ghost small" href={routes.cvBuild(c.id)}>
+                    Open
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

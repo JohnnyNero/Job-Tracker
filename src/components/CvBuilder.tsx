@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useStore } from '../store/store'
 import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion } from '../types'
-import { routes } from '../router'
-import { TextField, TextArea, SelectField } from './fields'
+import { navigate, routes } from '../router'
+import { TextField, TextArea } from './fields'
 import { CvPreview } from './CvPreview'
 import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
@@ -117,38 +117,36 @@ export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
 
 function VersionMeta({ version }: { version: CvVersion }) {
   const store = useStore()
-  const profiles = store.data.role_profiles
-
-  function toggleCurrent(next: boolean) {
-    // At most one current CV per profile.
-    if (next && version.profile_id) {
-      store.data.cv_versions
-        .filter((c) => c.id !== version.id && c.profile_id === version.profile_id && c.is_current)
-        .forEach((c) => store.updateCvVersion(c.id, { is_current: false }))
-    }
-    store.updateCvVersion(version.id, { is_current: next })
-  }
+  const profile = version.profile_id
+    ? store.data.role_profiles.find((p) => p.id === version.profile_id)
+    : null
 
   return (
     <div className="panel">
       <h2>This CV</h2>
       <div className="field-grid">
         <TextField label="Label" value={version.label} onCommit={(v) => store.updateCvVersion(version.id, { label: v })} />
-        <SelectField
-          label="Role profile"
-          value={version.profile_id ?? ''}
-          onChange={(v) => store.updateCvVersion(version.id, { profile_id: v || null })}
-          allowEmpty="—"
-          options={profiles.map((p) => ({ value: p.id, label: p.name }))}
+        <TextField
+          label="Angle"
+          value={version.angle ?? ''}
+          onCommit={(v) => store.updateCvVersion(version.id, { angle: v || null })}
+          placeholder="What this version leans into."
         />
       </div>
-      <label className="row" style={{ gap: 8, cursor: version.profile_id ? 'pointer' : 'default', marginTop: 4 }}>
-        <input type="checkbox" checked={version.is_current} disabled={!version.profile_id} onChange={(e) => toggleCurrent(e.target.checked)} style={{ width: 'auto' }} />
-        <span>Current CV for this profile{!version.profile_id ? ' (pick a profile first)' : ''}</span>
-      </label>
       <p className="section-note">
-        Allocate a CV to a role profile and it&rsquo;s pulled in automatically on any application you
-        set to that profile.
+        {profile ? (
+          <>
+            Allocated to the <strong>{profile.name}</strong> profile
+            {version.is_current ? ' (its current CV)' : ''}.{' '}
+          </>
+        ) : (
+          'Not allocated to a role profile yet. '
+        )}
+        Set which profile pulls this CV in — and mark it current — under{' '}
+        <a href={routes.profiles()} onClick={(e) => { e.preventDefault(); navigate(routes.profiles()) }}>
+          Role profiles
+        </a>
+        .
       </p>
     </div>
   )
@@ -425,20 +423,37 @@ function ExperienceCard({ exp, layout, patchLayout, first, last }: { exp: CvExpe
       </div>
 
       <div className="cv-bullets-edit">
-        {bullets.map((b, i) => (
-          <BulletRow
-            key={b.id}
-            bullet={b}
-            evidenceTitle={b.evidence_id ? evidence.find((e) => e.id === b.evidence_id)?.title ?? '(deleted evidence)' : null}
-            evidenceText={b.evidence_id ? evidence.find((e) => e.id === b.evidence_id)?.bullet ?? '' : ''}
-            onText={(t) => setBullets(bullets.map((x) => (x.id === b.id ? { ...x, text: t } : x)))}
-            onUp={() => i > 0 && setBullets(swap(bullets, i, i - 1))}
-            onDown={() => i < bullets.length - 1 && setBullets(swap(bullets, i, i + 1))}
-            onDelete={() => setBullets(bullets.filter((x) => x.id !== b.id))}
-            first={i === 0}
-            last={i === bullets.length - 1}
-          />
-        ))}
+        {bullets.map((b, i) => {
+          const ev = b.evidence_id ? evidence.find((e) => e.id === b.evidence_id) : undefined
+          const evText = ev?.bullet ?? ''
+          const update = (patch: Partial<CvBullet>) =>
+            setBullets(bullets.map((x) => (x.id === b.id ? { ...x, ...patch } : x)))
+          return (
+            <BulletRow
+              key={b.id}
+              bullet={b}
+              evidenceTitle={b.evidence_id ? ev?.title ?? '(deleted evidence)' : null}
+              evidenceText={evText}
+              onText={(t) => {
+                if (b.evidence_id) {
+                  const v = t.trim()
+                  // Store an override only when it differs from the evidence; an
+                  // empty or identical value stays live-linked.
+                  update({ text: !v || v === evText.trim() ? null : v })
+                } else {
+                  update({ text: t })
+                }
+              }}
+              onReset={() => update({ text: null })}
+              onDetach={() => update({ evidence_id: null, text: b.text?.trim() ? b.text : evText })}
+              onUp={() => i > 0 && setBullets(swap(bullets, i, i - 1))}
+              onDown={() => i < bullets.length - 1 && setBullets(swap(bullets, i, i + 1))}
+              onDelete={() => setBullets(bullets.filter((x) => x.id !== b.id))}
+              first={i === 0}
+              last={i === bullets.length - 1}
+            />
+          )
+        })}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <select
             value=""
@@ -471,36 +486,54 @@ function swap<T>(arr: T[], i: number, j: number): T[] {
   return next
 }
 
-function BulletRow({ bullet, evidenceTitle, evidenceText, onText, onUp, onDown, onDelete, first, last }: {
+function BulletRow({ bullet, evidenceTitle, evidenceText, onText, onReset, onDetach, onUp, onDown, onDelete, first, last }: {
   bullet: CvBullet
   evidenceTitle: string | null
   evidenceText: string
   onText: (t: string) => void
+  onReset: () => void
+  onDetach: () => void
   onUp: () => void
   onDown: () => void
   onDelete: () => void
   first: boolean
   last: boolean
 }) {
-  const text = bullet.evidence_id ? evidenceText : bullet.text ?? ''
-  const issues = checkBullet(text)
+  const isEvidence = !!bullet.evidence_id
+  const overridden = isEvidence && !!(bullet.text && bullet.text.trim())
+  // The text shown/edited: an evidence bullet's override, else the evidence's own
+  // wording; a manual bullet's text. Editing an evidence bullet only changes this
+  // CV — the saved evidence item is never touched.
+  const effective = isEvidence ? (overridden ? bullet.text! : evidenceText) : bullet.text ?? ''
+  const issues = checkBullet(effective)
   return (
     <div className="cv-bullet-row">
       <div className="cv-bullet-main">
-        {bullet.evidence_id ? (
-          <div className="cv-bullet-linked">
-            <span className="cv-bullet-text">{text || <em className="muted">empty evidence bullet</em>}</span>
-            <span className="cv-bullet-tag" title={`Linked to evidence: ${evidenceTitle}`}>↳ {evidenceTitle}</span>
+        <textarea
+          // Remount when the source flips (reset / detach) so the box reflects it.
+          key={`${bullet.id}-${isEvidence}-${overridden}`}
+          className="cv-bullet-input"
+          rows={2}
+          aria-label="Bullet text"
+          placeholder="Achievement — lead with a verb, add a number."
+          defaultValue={effective}
+          onBlur={(e) => e.target.value !== effective && onText(e.target.value)}
+        />
+        {isEvidence && (
+          <div className="cv-bullet-linkbar">
+            <span className="cv-bullet-tag" title={`Linked to evidence: ${evidenceTitle}`}>
+              ↳ {evidenceTitle}
+              {overridden ? ' · reworded for this CV' : ''}
+            </span>
+            {overridden && (
+              <button className="btn ghost small" onClick={onReset} title="Discard the override; use the saved evidence wording">
+                Reset
+              </button>
+            )}
+            <button className="btn ghost small" onClick={onDetach} title="Unlink from evidence — becomes a standalone bullet">
+              Detach
+            </button>
           </div>
-        ) : (
-          <textarea
-            className="cv-bullet-input"
-            rows={2}
-            aria-label="Bullet text"
-            placeholder="Achievement — lead with a verb, add a number."
-            defaultValue={bullet.text ?? ''}
-            onBlur={(e) => e.target.value !== (bullet.text ?? '') && onText(e.target.value)}
-          />
         )}
         {issues.length > 0 && (
           <div className="cv-bullet-issues">

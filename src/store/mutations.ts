@@ -441,6 +441,18 @@ export function duplicateCvVersion(data: Dataset, sourceId: string, label: strin
   return [{ ...data, cv_versions: [...data.cv_versions, cv] }, cv]
 }
 
+/** Allocate a CV as a profile's current one (from the Role profiles screen).
+ * Moves the chosen CV onto this profile and marks it current; unsets any other
+ * current CV on this profile. `cvId = null` clears the profile's current CV. */
+export function setProfileCurrentCv(data: Dataset, profileId: string, cvId: string | null): Dataset {
+  const cv_versions = data.cv_versions.map((c) => {
+    if (cvId && c.id === cvId) return { ...c, profile_id: profileId, is_current: true }
+    if (c.profile_id === profileId && c.is_current) return { ...c, is_current: false }
+    return c
+  })
+  return { ...data, cv_versions }
+}
+
 export function deleteCvVersion(data: Dataset, id: string): Dataset {
   return {
     ...data,

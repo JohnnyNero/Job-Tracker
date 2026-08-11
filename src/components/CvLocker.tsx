@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../store/store'
 import type { CvVersion } from '../types'
-import { TextField, TextArea, SelectField } from './fields'
+import { TextField, TextArea } from './fields'
 import { EmptyState } from './common'
 import { navigate, routes } from '../router'
 
@@ -75,17 +75,9 @@ function CvCard({ cv }: { cv: CvVersion }) {
     () => store.data.applications.filter((a) => a.cv_version_id === cv.id),
     [store.data.applications, cv.id],
   )
-
-  function toggleCurrent() {
-    const next = !cv.is_current
-    // At most one current CV per profile: unset siblings when turning this on.
-    if (next && cv.profile_id) {
-      store.data.cv_versions
-        .filter((c) => c.id !== cv.id && c.profile_id === cv.profile_id && c.is_current)
-        .forEach((c) => store.updateCvVersion(c.id, { is_current: false }))
-    }
-    store.updateCvVersion(cv.id, { is_current: next })
-  }
+  const profileName = cv.profile_id
+    ? store.data.role_profiles.find((p) => p.id === cv.profile_id)?.name ?? null
+    : null
 
   function del() {
     if (confirm(`Delete CV "${cv.label}"? Applications that used it keep their data but lose the link.`)) {
@@ -110,13 +102,6 @@ function CvCard({ cv }: { cv: CvVersion }) {
       </a>
 
       <TextField label="Label" value={cv.label} onCommit={(v) => store.updateCvVersion(cv.id, { label: v })} />
-      <SelectField
-        label="Role profile"
-        value={cv.profile_id ?? ''}
-        onChange={(v) => store.updateCvVersion(cv.id, { profile_id: v || null })}
-        allowEmpty="—"
-        options={store.data.role_profiles.map((p) => ({ value: p.id, label: p.name }))}
-      />
       <TextArea
         label="Angle"
         value={cv.angle ?? ''}
@@ -131,10 +116,18 @@ function CvCard({ cv }: { cv: CvVersion }) {
         placeholder="CV - operations manager v3.docx"
       />
 
-      <label className="row" style={{ gap: 8, marginTop: 4, marginBottom: 12, cursor: 'pointer' }}>
-        <input type="checkbox" checked={cv.is_current} onChange={toggleCurrent} style={{ width: 'auto' }} />
-        <span>Current version for this profile</span>
-      </label>
+      <p className="section-note" style={{ marginTop: 8, marginBottom: 12 }}>
+        {profileName ? (
+          <>Allocated to <strong>{profileName}</strong>{cv.is_current ? ' (current)' : ''}. </>
+        ) : (
+          'Not allocated to a profile. '
+        )}
+        Choose the current CV per profile under{' '}
+        <a href={routes.profiles()} onClick={(e) => { e.preventDefault(); navigate(routes.profiles()) }}>
+          Role profiles
+        </a>
+        .
+      </p>
 
       <hr className="hr" />
       <div className="lbl" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>

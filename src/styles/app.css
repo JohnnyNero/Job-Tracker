@@ -713,6 +713,18 @@ label.field > .lbl {
   color: var(--text-3);
   margin-top: 2px;
 }
+.cv-bullet-linkbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.cv-bullet-linkbar .cv-bullet-tag {
+  flex: 1;
+  min-width: 120px;
+  margin-top: 0;
+}
 .cv-bullet-input {
   width: 100%;
 }
