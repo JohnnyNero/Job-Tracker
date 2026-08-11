@@ -216,6 +216,12 @@ export function Guide() {
             standalone bullet.
           </li>
           <li>
+            <b>Pick a template.</b> Six looks (Classic, Modern, Elegant, Executive, Compact,
+            Accent) chosen from career-office design guidance — different fonts, spacing and
+            restrained accents, but all <b>single-column, real text, ATS-safe</b>. Swap freely from
+            the builder; it&rsquo;s per-CV.
+          </li>
+          <li>
             <b>Export.</b> <b>Print / PDF</b> produces a single-column, ATS-readable document
             (real selectable text, standard headings) — plus <b>Markdown</b> and <b>JSON Resume</b>{' '}
             for portability. For the cleanest PDF, set the print margins to Default and turn headers

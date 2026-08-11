@@ -115,7 +115,7 @@ export function CvForApplication({ app }: { app: Application }) {
             <details className="cvfa-preview">
               <summary>Preview this CV</summary>
               <div className="cv-sheet-wrap" style={{ maxHeight: '60vh', marginTop: 10 }}>
-                <CvPreview cv={rendered} />
+                <CvPreview cv={rendered} template={cv.layout?.template} />
               </div>
             </details>
           )}

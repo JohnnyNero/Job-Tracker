@@ -136,6 +136,8 @@ export interface CvLayout {
   bullets: Record<string, CvBullet[]>
   /** null = use Person.skills. */
   skills: string[] | null
+  /** Visual template id (see src/lib/cvTemplates.ts). Defaults to 'classic'. */
+  template?: string
 }
 
 export interface Application {

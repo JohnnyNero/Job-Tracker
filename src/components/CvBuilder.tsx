@@ -7,6 +7,7 @@ import { CvPreview } from './CvPreview'
 import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
 import { checkBullet, keywordCoverage } from '../lib/cvChecks'
+import { CV_TEMPLATES } from '../lib/cvTemplates'
 
 const EMPTY_LAYOUT: CvLayout = {
   summary: null,
@@ -100,8 +101,23 @@ export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
         </div>
 
         <div className="compose-pane cv-build-preview">
+          <div className="cv-template-picker">
+            <span className="lbl">Template</span>
+            <div className="cv-template-btns">
+              {CV_TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  className={`btn small ${(layout.template || 'classic') === t.id ? 'primary' : ''}`}
+                  onClick={() => patchLayout({ template: t.id })}
+                  title={t.blurb}
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="cv-sheet-wrap">
-            <CvPreview cv={cv} printable />
+            <CvPreview cv={cv} printable template={layout.template} />
           </div>
           <p className="section-note" style={{ marginTop: 10 }}>
             <strong>Print / PDF</strong> opens your browser&rsquo;s print dialog — choose{' '}

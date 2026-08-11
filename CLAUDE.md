@@ -101,7 +101,10 @@ components/*  →  useStore()  →  StoreProvider (src/store/store.tsx)
   bullet in `assembleCv` (Reset clears it; Detach drops `evidence_id`) — the
   saved evidence is never touched. Only the builder's preview gets the
   `.cv-print` hook (`CvPreview printable`), so an inline preview never hijacks
-  printing.
+  printing. Six ATS-safe **templates** (`src/lib/cvTemplates.ts` → `.tpl-<id>`
+  classes on `.cv-sheet`) are CSS-only looks over the same DOM (system fonts,
+  single column, colour only on text/rules — no columns/graphics/background
+  fills); the choice is stored per-version in `CvLayout.template`.
 
 Full detail: `docs/architecture.md`. Data model: `docs/data-model.md`.
 Rationale: `docs/decisions.md`. Roadmap/phases: `docs/roadmap.md`.

@@ -4,9 +4,9 @@ import type { RenderedCv } from '../lib/cv'
 // headings, no tables/graphics. `printable` adds the .cv-print hook so this is
 // the element the print stylesheet targets — only the builder's preview sets it,
 // so an inline preview elsewhere never hijacks printing.
-export function CvPreview({ cv, printable = false }: { cv: RenderedCv; printable?: boolean }) {
+export function CvPreview({ cv, printable = false, template }: { cv: RenderedCv; printable?: boolean; template?: string }) {
   return (
-    <div className={`cv-sheet ${printable ? 'cv-print' : ''}`}>
+    <div className={`cv-sheet tpl-${template || 'classic'} ${printable ? 'cv-print' : ''}`}>
       <header className="cv-head">
         <h1>{cv.name || 'Your Name'}</h1>
         {cv.headline && <p className="cv-headline">{cv.headline}</p>}

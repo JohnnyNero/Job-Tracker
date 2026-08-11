@@ -92,6 +92,7 @@ function normLayout(v: unknown): CvLayout | null {
     hidden_education_ids: strArr(o.hidden_education_ids),
     bullets,
     skills: Array.isArray(o.skills) ? strArr(o.skills) : null,
+    template: typeof o.template === 'string' ? o.template : undefined,
   }
 }
 

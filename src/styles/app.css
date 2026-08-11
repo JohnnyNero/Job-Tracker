@@ -575,8 +575,24 @@ label.field > .lbl {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
-  max-height: calc(100vh - 150px);
+  max-height: calc(100vh - 190px);
   overflow: auto;
+}
+.cv-template-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.cv-template-picker .lbl {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.cv-template-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 /* The document: always light, ATS-safe (single column, real text, standard
@@ -590,34 +606,35 @@ label.field > .lbl {
   padding: 38px 44px;
   box-shadow: var(--shadow-1);
   border-radius: 3px;
+  /* pt for print-facing type so it lands predictably in the PDF (≥10pt floor). */
   font-family: Georgia, 'Times New Roman', Times, serif;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 10.5pt;
+  line-height: 1.4;
 }
 .cv-head h1 {
-  font-size: 23px;
+  font-size: 22pt;
   margin: 0;
   color: #14181f;
   letter-spacing: -0.01em;
 }
 .cv-headline {
-  font-size: 14px;
+  font-size: 12pt;
   color: #333a44;
   margin: 2px 0 0;
 }
 .cv-contacts {
-  font-size: 12px;
+  font-size: 10pt;
   color: #4a515c;
   margin: 5px 0 0;
 }
 .cv-section {
-  margin-top: 17px;
+  margin-top: 18px;
 }
 .cv-section h2 {
-  font-size: 12.5px;
+  font-size: 10.5pt;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  border-bottom: 1px solid #c9ced6;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid #b9bfc8;
   padding-bottom: 3px;
   margin: 0 0 8px;
   color: #14181f;
@@ -641,12 +658,13 @@ label.field > .lbl {
 }
 .cv-entry-dates {
   color: #5a616c;
-  font-size: 12px;
+  font-size: 9.5pt;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .cv-entry-sub {
   color: #4a515c;
-  font-size: 12px;
+  font-size: 9.5pt;
   font-style: italic;
 }
 .cv-bullets {
@@ -655,6 +673,169 @@ label.field > .lbl {
 }
 .cv-bullets li {
   margin: 2px 0;
+}
+
+/* CV templates — CSS-only looks over the same DOM, from ATS-safe résumé-design
+   guidance (Harvard/Yale career offices). All single-column, system fonts, real
+   text; colour only on text/rules (no columns/graphics/background fills), and
+   every accent is dark enough to greyscale cleanly on a mono printer.
+   `.tpl-classic` is the base .cv-sheet above (Harvard-classic serif). */
+
+/* Modern Sans Minimal — Helvetica, no rules, hierarchy by weight (mono). */
+.tpl-modern {
+  font-family: Helvetica, Arial, 'Helvetica Neue', sans-serif;
+  line-height: 1.35;
+}
+.tpl-modern .cv-head h1 {
+  font-size: 21pt;
+  letter-spacing: -0.02em;
+}
+.tpl-modern .cv-headline {
+  font-weight: 400;
+  color: #333;
+}
+.tpl-modern .cv-section {
+  margin-top: 20px;
+}
+.tpl-modern .cv-section h2 {
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 0;
+  padding-bottom: 0;
+  font-size: 11pt;
+  color: #111;
+}
+.tpl-modern .cv-entry {
+  margin-bottom: 12px;
+}
+.tpl-modern .cv-bullets {
+  padding-left: 16px;
+}
+
+/* Elegant Garamond — editorial serif, small-caps headings, roomy (burgundy). */
+.tpl-elegant {
+  font-family: Garamond, 'EB Garamond', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-size: 11.5pt;
+  line-height: 1.45;
+}
+.tpl-elegant .cv-head h1 {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.tpl-elegant .cv-headline {
+  font-style: italic;
+  color: #444;
+}
+.tpl-elegant .cv-section {
+  margin-top: 22px;
+}
+.tpl-elegant .cv-section h2 {
+  display: inline-block;
+  font-variant: small-caps;
+  text-transform: none;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  font-size: 11pt;
+  border-bottom: 2px solid #6b2b3a;
+  padding-bottom: 2px;
+}
+.tpl-elegant .cv-entry {
+  margin-bottom: 14px;
+}
+.tpl-elegant .cv-bullets {
+  padding-left: 20px;
+}
+
+/* Executive — Cambria, navy accent + name rule, authoritative. */
+.tpl-executive {
+  font-family: Cambria, Georgia, 'Times New Roman', serif;
+}
+.tpl-executive .cv-head {
+  border-bottom: 2px solid #1f3a5f;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+.tpl-executive .cv-head h1 {
+  font-size: 23pt;
+  letter-spacing: 0.02em;
+  color: #1f3a5f;
+}
+.tpl-executive .cv-section {
+  margin-top: 20px;
+}
+.tpl-executive .cv-section h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #1f3a5f;
+  border-bottom: 1.5px solid #1f3a5f;
+  padding-bottom: 4px;
+}
+.tpl-executive .cv-entry {
+  margin-bottom: 13px;
+}
+
+/* Compact One-Page — Calibri, dense but not crammed (mono). */
+.tpl-compact {
+  font-family: Calibri, 'Segoe UI', Candara, Arial, sans-serif;
+  font-size: 10pt;
+  line-height: 1.2;
+  padding: 30px 34px;
+}
+.tpl-compact .cv-head h1 {
+  font-size: 18pt;
+}
+.tpl-compact .cv-headline {
+  font-size: 10.5pt;
+  color: #444;
+  margin-top: 1px;
+}
+.tpl-compact .cv-contacts {
+  font-size: 9pt;
+  margin-top: 3px;
+}
+.tpl-compact .cv-section {
+  margin-top: 11px;
+}
+.tpl-compact .cv-section h2 {
+  font-size: 10pt;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #cfd4db;
+  padding-bottom: 2px;
+  margin-bottom: 5px;
+}
+.tpl-compact .cv-entry {
+  margin-bottom: 7px;
+}
+.tpl-compact .cv-bullets {
+  padding-left: 15px;
+}
+.tpl-compact .cv-bullets li {
+  margin: 1px 0;
+}
+
+/* Accented Header — Segoe/Arial, one restrained teal accent (name + heading
+   underline), everything else black/gray. */
+.tpl-accent {
+  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+  line-height: 1.35;
+}
+.tpl-accent .cv-head h1 {
+  font-size: 22pt;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #2b5566;
+}
+.tpl-accent .cv-headline {
+  font-weight: 400;
+  color: #333;
+}
+.tpl-accent .cv-section h2 {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #2b5566;
+  border-bottom: 2px solid #2b5566;
+  padding-bottom: 2px;
 }
 
 /* Editor rows */
