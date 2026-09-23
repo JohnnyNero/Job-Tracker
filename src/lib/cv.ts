@@ -156,6 +156,92 @@ export function cvToMarkdown(cv: RenderedCv): string {
   return out.join('\n')
 }
 
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/** Word-openable .doc projection. It's an HTML document carrying the Word XML
+ * namespace + a charset meta, so Word, Google Docs and LibreOffice all open it
+ * as an editable document. Single column, real headings and <ul> bullets, no
+ * tables or graphics — same ATS-safe shape as the print view, but editable. */
+export function cvToDoc(cv: RenderedCv): string {
+  const body: string[] = []
+  body.push(`<h1>${esc(cv.name || 'Your Name')}</h1>`)
+  if (cv.headline) body.push(`<p class="headline">${esc(cv.headline)}</p>`)
+  if (cv.contacts.length) body.push(`<p class="contacts">${cv.contacts.map(esc).join('  ·  ')}</p>`)
+
+  if (cv.summary) {
+    body.push('<h2>Summary</h2>')
+    body.push(`<p>${esc(cv.summary)}</p>`)
+  }
+
+  if (cv.experiences.length) {
+    body.push('<h2>Experience</h2>')
+    for (const e of cv.experiences) {
+      const title = esc(e.title) + (e.company ? `, ${esc(e.company)}` : '')
+      body.push(
+        `<p class="entry"><strong>${title}</strong>${e.dates ? `<span class="dates">${esc(e.dates)}</span>` : ''}</p>`,
+      )
+      if (e.location) body.push(`<p class="sub">${esc(e.location)}</p>`)
+      if (e.bullets.length) {
+        body.push('<ul>')
+        for (const b of e.bullets) body.push(`<li>${esc(b)}</li>`)
+        body.push('</ul>')
+      }
+    }
+  }
+
+  if (cv.skillGroups.length) {
+    body.push('<h2>Skills</h2>')
+    for (const g of cv.skillGroups) {
+      const items = g.items.map(esc).join('  ·  ')
+      body.push(g.name ? `<p><strong>${esc(g.name)}:</strong> ${items}</p>` : `<p>${items}</p>`)
+    }
+  }
+
+  if (cv.education.length) {
+    body.push('<h2>Education</h2>')
+    for (const e of cv.education) {
+      body.push(
+        `<p class="entry"><strong>${esc(e.institution)}</strong>${e.dates ? `<span class="dates">${esc(e.dates)}</span>` : ''}</p>`,
+      )
+      if (e.line) body.push(`<p class="sub">${esc(e.line)}</p>`)
+      if (e.note) body.push(`<p class="note">${esc(e.note)}</p>`)
+    }
+  }
+
+  // The xmlns:w namespace + ProgId meta are what make Word treat this HTML as a
+  // Word document. Styling is deliberately minimal — ATS parsers want plain text.
+  return `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<meta name="ProgId" content="Word.Document">
+<title>${esc(cv.name || 'CV')}</title>
+<style>
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000; }
+h1 { font-size: 20pt; margin: 0 0 2pt; }
+h2 { font-size: 13pt; margin: 14pt 0 4pt; border-bottom: 1px solid #999; }
+p { margin: 0 0 4pt; }
+.headline { font-size: 12pt; font-weight: bold; }
+.contacts { color: #333; }
+.entry .dates { float: right; font-weight: normal; color: #333; }
+.sub { color: #333; font-style: italic; }
+.note { color: #333; }
+ul { margin: 2pt 0 6pt 18pt; padding: 0; }
+li { margin: 0 0 2pt; }
+</style>
+</head>
+<body>
+${body.join('\n')}
+</body>
+</html>`
+}
+
 /** JSON Resume (jsonresume.org/schema) projection — the portable interchange
  * format, so the CV isn't locked into this app. */
 export function cvToJsonResume(cv: RenderedCv): unknown {

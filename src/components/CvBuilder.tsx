@@ -4,7 +4,7 @@ import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion, SkillGro
 import { navigate, routes } from '../router'
 import { TextField, TextArea } from './fields'
 import { CvPreview } from './CvPreview'
-import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
+import { assembleCv, cvToMarkdown, cvToJsonResume, cvToDoc } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
 import { checkBullet } from '../lib/cvChecks'
 import { keywordsForApp, keywordCoverage } from '../lib/keywords'
@@ -31,8 +31,8 @@ function download(name: string, text: string, type: string) {
 }
 
 // The CV builder: assemble one CV version from your "about you" record, work
-// history, and evidence-bank bullets, then export an ATS-clean PDF/Markdown/
-// JSON Resume. Left pane edits, right pane is the live document.
+// history, and evidence-bank bullets, then export an ATS-clean PDF/Word/
+// Markdown/JSON Resume. Left pane edits, right pane is the live document.
 export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
   const store = useStore()
   const version = store.data.cv_versions.find((c) => c.id === id)
@@ -68,6 +68,9 @@ export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
         <h1>CV builder</h1>
         <span className="sub">{version.label}</span>
         <span className="spacer" style={{ flex: 1 }} />
+        <button className="btn" onClick={() => download(`${slug}.doc`, cvToDoc(cv), 'application/msword')}>
+          Word (.doc)
+        </button>
         <button className="btn" onClick={() => download(`${slug}.md`, cvToMarkdown(cv), 'text/markdown')}>
           Markdown
         </button>
