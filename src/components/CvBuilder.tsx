@@ -4,7 +4,7 @@ import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion, SkillGro
 import { navigate, routes } from '../router'
 import { TextField, TextArea } from './fields'
 import { CvPreview } from './CvPreview'
-import { assembleCv, cvToMarkdown, cvToJsonResume, cvToDoc } from '../lib/cv'
+import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
 import { checkBullet } from '../lib/cvChecks'
 import { keywordsForApp, keywordCoverage } from '../lib/keywords'
@@ -18,8 +18,7 @@ const EMPTY_LAYOUT: CvLayout = {
   skills: null,
 }
 
-function download(name: string, text: string, type: string) {
-  const blob = new Blob([text], { type })
+function downloadBlob(name: string, blob: Blob) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -28,6 +27,18 @@ function download(name: string, text: string, type: string) {
   a.click()
   a.remove()
   URL.revokeObjectURL(url)
+}
+
+function download(name: string, text: string, type: string) {
+  downloadBlob(name, new Blob([text], { type }))
+}
+
+// The .docx generator (and its `docx` dependency) is code-split behind a dynamic
+// import, so it only loads when you actually export Word — the offline PWA's
+// initial bundle stays lean.
+async function downloadDocx(slug: string, cv: RenderedCv) {
+  const { cvToDocxBlob } = await import('../lib/cvDocx')
+  downloadBlob(`${slug}.docx`, await cvToDocxBlob(cv))
 }
 
 // The CV builder: assemble one CV version from your "about you" record, work
@@ -68,8 +79,8 @@ export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
         <h1>CV builder</h1>
         <span className="sub">{version.label}</span>
         <span className="spacer" style={{ flex: 1 }} />
-        <button className="btn" onClick={() => download(`${slug}.doc`, cvToDoc(cv), 'application/msword')}>
-          Word (.doc)
+        <button className="btn" onClick={() => downloadDocx(slug, cv)}>
+          Word (.docx)
         </button>
         <button className="btn" onClick={() => download(`${slug}.md`, cvToMarkdown(cv), 'text/markdown')}>
           Markdown
