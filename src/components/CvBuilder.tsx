@@ -3,7 +3,7 @@ import { useStore } from '../store/store'
 import type { CvBullet, CvExperience, CvEducation, CvLayout, CvVersion, SkillGroup } from '../types'
 import { navigate, routes } from '../router'
 import { TextField, TextArea } from './fields'
-import { CvPreview } from './CvPreview'
+import { CvPagePreview } from './CvPagePreview'
 import { assembleCv, cvToMarkdown, cvToJsonResume } from '../lib/cv'
 import type { RenderedCv } from '../lib/cv'
 import { checkBullet } from '../lib/cvChecks'
@@ -131,9 +131,7 @@ export function CvBuilder({ id, appId }: { id: string; appId?: string }) {
               ))}
             </div>
           </div>
-          <div className="cv-sheet-wrap">
-            <CvPreview cv={cv} printable template={layout.template} />
-          </div>
+          <CvPagePreview cv={cv} template={layout.template} />
           <p className="section-note" style={{ marginTop: 10 }}>
             <strong>Print / PDF</strong> opens your browser&rsquo;s print dialog — choose{' '}
             <em>Save as PDF</em>, and for the cleanest result set margins to Default and turn

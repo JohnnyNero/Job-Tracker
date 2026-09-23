@@ -578,6 +578,49 @@ label.field > .lbl {
   max-height: calc(100vh - 190px);
   overflow: auto;
 }
+
+/* A4 print-preview: render the document at true A4 with the real 16mm margins,
+   then scale it to fit the pane (CvPagePreview sets the transform inline and
+   reserves the scaled box). Screen only — the PDF gets real A4 from @page, and
+   the print block below neutralises these wrappers so printing is unchanged. */
+@media screen {
+  .cv-page-frame {
+    margin: 0 auto;
+  }
+  .cv-page-scale {
+    transform-origin: top left;
+  }
+  .cv-page-scale .cv-sheet {
+    width: 210mm;
+    max-width: none;
+    min-height: 297mm;
+    padding: 16mm;
+    margin: 0;
+    box-sizing: border-box;
+    /* a child's offsetTop is then measured from the sheet, for the fill gauge */
+    position: relative;
+    border-radius: 0;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.18);
+    /* A faint rule at each A4 page boundary (every 297mm from the top), so a CV
+       that spills shows where page 1 ends. Approximate — the real PDF avoids
+       breaking inside entries — but enough to gauge where the split falls. */
+    background-color: #ffffff;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(297mm - 1px),
+      rgba(20, 24, 31, 0.16) calc(297mm - 1px),
+      rgba(20, 24, 31, 0.16) 297mm
+    );
+  }
+}
+.cv-fill-note {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
 .cv-template-picker {
   display: flex;
   align-items: center;
@@ -1002,6 +1045,18 @@ label.field > .lbl {
     padding: 0 !important;
     border: 0 !important;
     background: #fff !important;
+  }
+  /* Undo the on-screen A4 scaling wrappers so .cv-print prints at real page size
+     (a transformed ancestor would otherwise become the containing block and
+     scale/clip the output). !important beats CvPagePreview's inline styles. */
+  .cv-page-frame {
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+  }
+  .cv-page-scale {
+    transform: none !important;
+    width: auto !important;
   }
   .cv-print,
   .cv-print * {
